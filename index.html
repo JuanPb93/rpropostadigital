@@ -1,0 +1,817 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Sistema Único (Offline) - Documentos</title>
+<style>
+  :root{--bg:#0b1220;--panel:#111827;--card:#0f172a;--border:rgba(255,255,255,.10);--ink:#e5e7eb;--muted:#9ca3af;--accent:#ff7a00;}
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:Arial,sans-serif;background:linear-gradient(180deg,#0b1220 0%,#0b1220 60%,#0a1020 100%);color:var(--ink);}
+  .app{min-height:100vh;display:flex;}
+  .sidebar{width:320px;max-width:320px;background:rgba(17,24,39,.95);border-right:1px solid var(--border);padding:14px;position:sticky;top:0;align-self:flex-start;height:100vh;overflow:auto;}
+  .brand{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:14px;background:rgba(255,255,255,.04);position:relative;overflow:hidden;}
+
+  .brand .title{font-weight:900;letter-spacing:.3px;}
+  .brand .sub{font-size:12px;color:var(--muted);margin-top:2px;}
+  
+  .brand::before{display:none !important;}
+  .brand > *{position:relative;z-index:1;}
+.pill{display:inline-flex;align-items:center;gap:8px;padding:8px 10px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid var(--border);font-size:12px;color:var(--muted);}
+  .brand .pill{display:none !important;}
+
+  .menu{margin-top:12px;display:flex;flex-direction:column;gap:10px;}
+  .item{border:1px solid var(--border);border-radius:14px;padding:12px;background:rgba(255,255,255,.03);cursor:pointer;transition:transform .06s ease,background .12s ease,border-color .12s ease;user-select:none;}
+  .item:hover{transform:translateY(-1px);background:rgba(255,255,255,.05);}
+  .item.active{background:rgba(255,122,0,.12);border-color:rgba(255,122,0,.45);}
+  .item .k{font-weight:900;}
+  .item .d{font-size:12px;color:var(--muted);margin-top:4px;line-height:1.25;}
+  .masterbtn{width:100%;margin-top:14px;padding:18px 14px;border-radius:16px;border:2px solid rgba(255,122,0,.65);background:rgba(255,122,0,.14);color:#ffb26b;font-weight:900;font-size:22px;letter-spacing:.4px;cursor:pointer;text-align:left;}
+  .masterbtn:hover{background:rgba(255,122,0,.18);}
+  .masterbtn:disabled{opacity:.55;cursor:not-allowed;}
+  .foot{display:none;}
+  .content{flex:1;padding:14px;display:flex;flex-direction:column;height:100vh;}
+  .topbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding:12px 14px;border:1px solid var(--border);border-radius:16px;background:rgba(255,255,255,.03);}
+  .crumb{font-weight:900;}
+  .help{font-size:12px;color:var(--muted);}
+  .instbar{margin-top:12px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:12px 14px;border:1px solid var(--border);border-radius:16px;background:rgba(255,255,255,.03);}
+  .instbtn{border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--ink);border-radius:999px;padding:10px 12px;font-weight:900;cursor:pointer;user-select:none;}
+  .instbtn.active{background:rgba(255,122,0,.18);border-color:rgba(255,122,0,.5);}
+  .instbtn:disabled{opacity:.45;cursor:not-allowed;}
+  .instbtn.add{background:rgba(255,122,0,.9);border-color:rgba(255,122,0,.9);color:#0b1220;}
+  .instbtn.danger{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.18);color:#fecaca;}
+  .stage{margin-top:12px;border:1px solid var(--border);border-radius:16px;background:rgba(255,255,255,.02);overflow:hidden;flex:1;min-height:520px;}
+  .framewrap{width:100%;height:100%;display:none;}
+  .framewrap.active{display:block;}
+  iframe{width:100%;height:100%;border:0;background:#fff;}
+  .modalOverlay{position:fixed;inset:0;background:rgba(0,0,0,.62);display:none;align-items:center;justify-content:center;z-index:99999;padding:18px;}
+  .modal{width:min(920px,96vw);max-height:88vh;overflow:auto;background:rgba(17,24,39,.98);border:1px solid rgba(255,255,255,.14);border-radius:18px;box-shadow:0 20px 60px rgba(0,0,0,.55);padding:16px 16px 14px;}
+  .modal h2{margin:0 0 8px;font-size:18px;}
+  .modal .small{color:var(--muted);font-size:12px;margin-bottom:12px;line-height:1.35;}
+  .modal .list{border-top:1px solid rgba(255,255,255,.12);margin-top:10px;padding-top:10px;}
+  .modal .grp{margin:10px 0;padding:10px;border:1px solid rgba(255,255,255,.10);border-radius:14px;background:rgba(255,255,255,.03);}
+  .modal .grp .t{font-weight:900;margin-bottom:6px;}
+  .modal ul{margin:0;padding-left:18px;color:#fde68a;}
+  .modal .actions{display:flex;justify-content:flex-end;gap:10px;margin-top:12px;}
+  .modal .closeBtn{padding:10px 14px;border-radius:999px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:var(--ink);font-weight:900;cursor:pointer;}
+  @media (max-width:980px){.app{flex-direction:column;}.sidebar{width:100%;max-width:none;height:auto;position:relative;}.stage{height:72vh;}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div>
+        <div class="title">R-Proposta Digital</div>
+        <div class="sub">Abrir no Chrome • Navegação por abas</div>
+      </div>
+      <div class="pill" title="Persistência local">localStorage</div>
+    </div>
+
+    <div class="menu" id="menu"></div>
+<button id="viewUnifiedBtn" class="masterbtn" type="button">VISUALIZAR</button>
+
+    <div class="foot"></div>
+  </aside>
+
+  <main class="content">
+    <div class="topbar">
+      <div class="crumb" id="crumb">—</div>
+      <div class="help" id="help">Selecione um documento no menu.</div>
+    </div>
+
+    <div class="instbar" id="instbar" style="display:none;"></div>
+
+    <div class="stage" id="stage"></div>
+  </main>
+</div>
+
+<div class="modalOverlay" id="modalOverlay" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <div class="modal">
+    <h2 id="modalTitle">Faltam campos obrigatórios</h2>
+    <div class="small">
+      Preencha os itens abaixo e tente novamente. (O botão <b>GERAR PDF / IMPRIMIR</b> só funciona quando <b>tudo</b> estiver válido.)
+    </div>
+    <div class="list" id="modalList"></div>
+    <div class="actions">
+      <button class="closeBtn" id="modalCloseBtn" type="button">FECHAR</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const DOCS = [
+    { id:'proposta', title:'PROPOSTA COLETIVO POR ADESÃO', file:'PROPOSTA_COLETIVO_POR_ADESAO.html', min:1, max:1, desc:'Documento único (1/1).' },
+    { id:'carencia', title:'TERMO DE CARÊNCIA', file:'TERMO_DE_CARENCIA.html', min:1, max:5, desc:'Até 5 documentos (mín. 1).' },
+    { id:'carta',    title:'CARTA ANS', file:'CARTA_ANS.html', min:1, max:5, desc:'Até 5 documentos (mín. 1).' },
+    { id:'consent',  title:'TERMO DE CONSENTIMENTO', file:'TERMO_DE_CONSENTIMENTO.html', min:1, max:1, desc:'Documento único (1/1).' },
+    { id:'comprov',  title:'COMPROVANTE DE ADESÃO', file:'COMPROVANTE_ADESAO.html', min:1, max:1, desc:'Documento único (1/1).' },
+  ];
+
+  const LS_KEY = 'sistema_unico_docs_v7';
+  const $ = (sel) => document.querySelector(sel);
+
+  function loadState(){
+    try{ const raw = localStorage.getItem(LS_KEY); return raw ? JSON.parse(raw) : null; }
+    catch(e){ return null; }
+  }
+  function saveState(s){
+    try{ localStorage.setItem(LS_KEY, JSON.stringify(s)); }catch(e){}
+    try{ window.__unifiedState = s; }catch(e){}
+  }
+
+  const state = loadState() || {
+    counts: Object.fromEntries(DOCS.map(d => [d.id, d.min])),
+    activeDocId: DOCS[0].id,
+    activeInstIndex: Object.fromEntries(DOCS.map(d => [d.id, 1])),
+  };
+
+  for(const d of DOCS){
+    const c = Number(state.counts?.[d.id] ?? d.min);
+    state.counts[d.id] = Math.min(d.max, Math.max(d.min, isFinite(c)?c:d.min));
+    const a = Number(state.activeInstIndex?.[d.id] ?? 1);
+    state.activeInstIndex[d.id] = Math.min(state.counts[d.id], Math.max(1, isFinite(a)?a:1));
+  }
+  if(!DOCS.some(d => d.id === state.activeDocId)) state.activeDocId = DOCS[0].id;
+
+  // expõe o estado atual para outros patches (ex.: VISUALIZAR) sem depender de F5
+  try{ window.__unifiedState = state; }catch(e){}
+
+  const menu = $('#menu');
+  const stage = $('#stage');
+  const instbar = $('#instbar');
+  const frames = Object.create(null);
+
+  function buildMenu(){
+    menu.innerHTML = '';
+    DOCS.forEach((d, idx) => {
+      const el = document.createElement('div');
+      el.className = 'item';
+      el.dataset.doc = d.id;
+      el.innerHTML = '<div class="k">'+(idx+1)+'. '+d.title+'</div><div class="d">'+d.desc+'</div>';
+      el.addEventListener('click', () => activateDoc(d.id));
+      menu.appendChild(el);
+    });
+  }
+
+  function ensureFrames(docId){
+    const doc = DOCS.find(d => d.id === docId);
+    if(!doc) return;
+    if(!frames[docId]) frames[docId] = [];
+
+    for(let i=frames[docId].length + 1; i<=state.counts[docId]; i++){
+      const wrap = document.createElement('div');
+      wrap.className = 'framewrap';
+      wrap.dataset.doc = docId;
+      wrap.dataset.inst = String(i);
+
+      const iframe = document.createElement('iframe');
+      iframe.src = doc.file + '#inst=' + i + '&ts=' + Date.now();
+      wrap.appendChild(iframe);
+
+      frames[docId].push(wrap);
+      stage.appendChild(wrap);
+    }
+  }
+
+  // Remove do DOM e do cache interno quaisquer iframes de instâncias acima do contador atual.
+  // Isso evita que o VISUALIZAR / SALVAR pegue instâncias “removidas” sem precisar dar F5.
+  function pruneFrames(docId){
+    const doc = DOCS.find(d => d.id === docId);
+    if(!doc) return;
+    if(!frames[docId]) frames[docId] = [];
+
+    // Primeiro, remove do array/cache
+    while(frames[docId].length > state.counts[docId]){
+      const wrap = frames[docId].pop();
+      try{ wrap && wrap.remove(); }catch(e){
+        try{ wrap && wrap.parentNode && wrap.parentNode.removeChild(wrap); }catch(e2){}
+      }
+    }
+
+    // Segundo, limpeza defensiva no DOM (caso algo tenha ficado órfão)
+    try{
+      stage.querySelectorAll('.framewrap[data-doc="'+docId+'"]').forEach(w=>{
+        const inst = parseInt(w.dataset.inst||'0',10);
+        if(inst > state.counts[docId]){
+          try{ w.remove(); }catch(e){ try{ w.parentNode && w.parentNode.removeChild(w); }catch(e2){} }
+        }
+      });
+    }catch(e){}
+  }
+
+  function setActiveWrap(docId, instIndex){
+    stage.querySelectorAll('.framewrap').forEach(w => w.classList.remove('active'));
+    ensureFrames(docId);
+    pruneFrames(docId);
+    const wrap = (frames[docId] || []).find(w => Number(w.dataset.inst) === instIndex);
+    if(wrap) wrap.classList.add('active');
+  }
+
+  function renderInstBar(docId){
+    const doc = DOCS.find(d => d.id === docId);
+    if(!doc) return;
+
+    if(doc.max === 1){
+      instbar.style.display = 'none';
+      instbar.innerHTML = '';
+      return;
+    }
+
+    instbar.style.display = 'flex';
+    instbar.innerHTML = '';
+
+    const label = document.createElement('div');
+    label.style.fontWeight = '900';
+    label.style.marginRight = '6px';
+    label.textContent = 'INSTÂNCIAS:';
+    instbar.appendChild(label);
+
+    for(let i=1; i<=state.counts[docId]; i++){
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'instbtn' + (i === state.activeInstIndex[docId] ? ' active' : '');
+      b.textContent = String(i);
+      b.addEventListener('click', () => activateDoc(docId, i));
+      instbar.appendChild(b);
+    }
+
+    const add = document.createElement('button');
+    add.type = 'button';
+    add.className = 'instbtn add';
+    add.textContent = '+ ADICIONAR';
+    add.disabled = state.counts[docId] >= doc.max;
+    add.addEventListener('click', () => {
+      if(state.counts[docId] >= doc.max) return;
+      state.counts[docId] += 1;
+      state.activeInstIndex[docId] = state.counts[docId];
+      saveState(state);
+      ensureFrames(docId);
+      activateDoc(docId, state.activeInstIndex[docId]);
+    });
+    instbar.appendChild(add);
+
+    const rem = document.createElement('button');
+    rem.type = 'button';
+    rem.className = 'instbtn danger';
+    rem.textContent = 'REMOVER ÚLTIMA';
+    rem.disabled = state.counts[docId] <= doc.min;
+    rem.addEventListener('click', () => {
+      if(state.counts[docId] <= doc.min) return;
+      state.counts[docId] -= 1;
+      state.activeInstIndex[docId] = Math.min(state.activeInstIndex[docId], state.counts[docId]);
+      saveState(state);
+      // Remove a instância “apagada” imediatamente (sem precisar recarregar a página)
+      pruneFrames(docId);
+      activateDoc(docId, state.activeInstIndex[docId]);
+    });
+    instbar.appendChild(rem);
+
+    const note = document.createElement('div');
+    note.style.marginLeft = 'auto';
+    note.style.fontSize = '12px';
+    note.style.color = 'var(--muted)';
+    note.textContent = `(${state.counts[docId]}/${doc.max})`;
+    instbar.appendChild(note);
+  }
+
+  function activateDoc(docId, instIndex){
+    const doc = DOCS.find(d => d.id === docId);
+    if(!doc) return;
+
+    state.activeDocId = docId;
+    if(doc.max === 1){
+      state.activeInstIndex[docId] = 1;
+    }else{
+      const idx = Number(instIndex ?? state.activeInstIndex[docId] ?? 1);
+      state.activeInstIndex[docId] = Math.min(state.counts[docId], Math.max(1, idx));
+    }
+    saveState(state);
+
+    menu.querySelectorAll('.item').forEach(el => {
+      el.classList.toggle('active', el.dataset.doc === docId);
+    });
+
+    $('#crumb').textContent = doc.title + (doc.max > 1 ? (' • Instância ' + state.activeInstIndex[docId]) : '');
+    $('#help').textContent = (doc.max > 1)
+      ? 'Use + ADICIONAR para criar novas instâncias (até 5). Cada instância é independente.'
+      : 'Documento único.';
+
+    renderInstBar(docId);
+    setActiveWrap(docId, state.activeInstIndex[docId]);
+  }
+
+  
+  // SALVAR / VISUALIZAR (documento unificado em HTML)
+  const saveBtn = $('#saveUnifiedBtn');
+  const viewBtn = $('#viewUnifiedBtn');
+
+  function buildUnifiedHtml(seq){
+    let head = '';
+    // Mantém os estilos do index (apenas para o visual do "viewer")
+    document.querySelectorAll('style, link[rel="stylesheet"]').forEach(s => { head += s.outerHTML; });
+
+    const css = `
+      <style>
+        html,body{margin:0;padding:0;background:#fff;color:#000;}
+        .topbar{position:sticky;top:0;z-index:9999;background:#111;color:#fff;
+          font-family:system-ui,Segoe UI,Arial; padding:10px 12px; display:flex; gap:10px; align-items:center;}
+        .topbar .hint{opacity:.8;font-size:12px;}
+        .btn{appearance:none;border:0;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer}
+        .btn.print{background:#2b7; color:#000;}
+        .btn.close{background:#444; color:#fff;}
+        .doc{padding:0 12px 24px 12px;}
+        .block{padding:0; margin:0 0 18px 0;}
+        .block:not(:first-child){break-before:page; page-break-before:always;}
+        .block:last-child{margin-bottom:0;}
+        iframe.pframe{width:100%; border:0; overflow:hidden; display:block; background:#fff;}
+        @media print{
+          .topbar{display:none !important;}
+          .doc{padding:0 !important;}
+          .block{margin:0 !important;}
+          .block:not(:first-child){break-before:page !important; page-break-before:always !important;}
+          iframe.pframe{width:100% !important;}
+        }
+      </style>
+    `;
+
+    let body = `<div class="topbar">
+        <button class="btn print" onclick="window.print()">IMPRIMIR</button>
+        <span class="hint">Dica: na impressão, desmarque “Cabeçalhos e rodapés” e marque “Gráficos de plano de fundo”.</span>
+      </div><div class="doc" id="doc">`;
+
+    // Cada item vira um iframe com srcdoc (com valores refletidos)
+    for(const it of seq){
+      const d = it.iframe?.contentWindow?.document;
+      if(!d) continue;
+      try{ reflectValuesForSerialization(d); }catch(e){}
+      const htmlFull = d.documentElement?.outerHTML || '';
+      // Escapar para srcdoc
+      const esc = htmlFull
+        .replace(/&/g,'&amp;')
+        .replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;')
+        .replace(/"/g,'&quot;');
+
+      body += `<div class="block"><iframe class="pframe" srcdoc="${esc}"></iframe></div>`;
+    }
+    body += `</div>
+      <script>
+        // Ajusta a altura dos iframes para não cortar conteúdo e evitar barra de scroll
+        function resizeAll(){
+          document.querySelectorAll('iframe.pframe').forEach(f=>{
+            try{
+              const doc = f.contentDocument;
+              if(!doc) return;
+              const h = Math.max(
+                doc.documentElement.scrollHeight||0,
+                doc.body ? doc.body.scrollHeight||0 : 0
+              );
+              if(h) f.style.height = (h + 2) + 'px';
+            }catch(e){}
+          });
+        }
+        window.addEventListener('load', ()=>{ setTimeout(resizeAll, 200); setTimeout(resizeAll, 800); });
+      <\/script>`;
+
+    return `<!doctype html><html><head><meta charset="utf-8"><title>Documento Unificado</title>${head}${css}</head><body>${body}</body></html>`;
+  }
+
+  function buildUnifiedSeq(){
+    const seq = collectWrapsInOrder();
+    // filtra apenas iframes que existem
+    return seq.filter(it => it && it.iframe);
+  }
+
+  function openUnifiedViewer(htmlStr){
+    const blob = new Blob([htmlStr], {type:'text/html;charset=utf-8'});
+    const url = URL.createObjectURL(blob);
+    window.open(url, '_blank');
+    // Não revoga imediatamente para não quebrar a aba recém aberta
+    setTimeout(()=>{ try{ URL.revokeObjectURL(url); }catch(e){} }, 60_000);
+  }
+
+  function downloadUnifiedHtml(htmlStr){
+    const blob = new Blob([htmlStr], {type:'text/html;charset=utf-8'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'DOCUMENTO_UNIFICADO.html';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(()=>{ try{ URL.revokeObjectURL(url); }catch(e){} }, 60_000);
+  }
+
+  async function onView(ev){
+    ev.preventDefault(); ev.stopPropagation();
+    if(!hasGlobals()) return;
+    // Mantém a validação existente (se tiver campos obrigatórios pendentes, mostra modal)
+    let problems = [];
+    try{ problems = await validateAll(); }catch(e){}
+    if(problems && problems.length){ try{ showModal(problems); }catch(e){} return; }
+
+    const seq = buildUnifiedSeq();
+    if(!seq.length){ alert('Nenhum documento carregado para visualizar.'); return; }
+    const htmlStr = buildUnifiedHtml(seq);
+    openUnifiedViewer(htmlStr);
+  }
+
+  async function onSave(ev){
+    ev.preventDefault(); ev.stopPropagation();
+    if(!hasGlobals()) return;
+    let problems = [];
+    try{ problems = await validateAll(); }catch(e){}
+    if(problems && problems.length){ try{ showModal(problems); }catch(e){} return; }
+
+    const seq = buildUnifiedSeq();
+    if(!seq.length){ alert('Nenhum documento carregado para salvar.'); return; }
+    const htmlStr = buildUnifiedHtml(seq);
+    downloadUnifiedHtml(htmlStr);
+  }
+// init
+  buildMenu();
+  if(saveBtn) saveBtn.addEventListener('click', onSave);
+  if(viewBtn) viewBtn.addEventListener('click', onView);
+  DOCS.forEach(d => ensureFrames(d.id));
+  activateDoc(state.activeDocId, state.activeInstIndex[state.activeDocId]);
+})();
+</script>
+
+<script>
+/* Patch V2: VISUALIZAR unificado (abre nova guia com PRÉVIAS em ordem, imprimir via Ctrl+P)
+   - Não altera o restante do sistema
+   - Remove listeners antigos do botão VISUALIZAR substituindo o elemento
+   - Não bloqueia por validação
+   - Evita travar o botão em caso de erro (busy sempre resetado)
+*/
+(function(){
+  if(window.__unifiedViewPatchV2) return;
+  window.__unifiedViewPatchV2 = true;
+
+  const ORDER = ['proposta','carencia','carta','consent','comprov'];
+
+  function $(sel){ return document.querySelector(sel); }
+  function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+
+  // PostMessage helper (Bridge V2 nos documentos)
+  function postToIframe(iframe, payload, timeoutMs){
+    timeoutMs = timeoutMs || 1800;
+    const rid = 'RID_' + Date.now() + '_' + Math.random().toString(16).slice(2);
+    const msg = Object.assign({__unified:true, rid}, payload);
+
+    return new Promise((resolve, reject)=>{
+      let done = false;
+      const timer = setTimeout(()=>{
+        if(done) return;
+        done = true;
+        window.removeEventListener('message', onMsg, false);
+        reject(new Error('timeout:' + (payload && payload.type)));
+      }, timeoutMs);
+
+      function onMsg(ev){
+        const data = ev.data;
+        if(!data || typeof data !== 'object') return;
+        if(data.__unified !== true) return;
+        if(data.rid !== rid) return;
+        if(done) return;
+        done = true;
+        clearTimeout(timer);
+        window.removeEventListener('message', onMsg, false);
+        resolve(data);
+      }
+
+      window.addEventListener('message', onMsg, false);
+      try{
+        iframe.contentWindow.postMessage(msg, '*');
+      }catch(e){
+        clearTimeout(timer);
+        window.removeEventListener('message', onMsg, false);
+        reject(e);
+      }
+    });
+  }
+
+  async function ensureReady(iframe){
+    // tenta PING algumas vezes
+    for(let i=0;i<4;i++){
+      try{
+        const r = await postToIframe(iframe, {type:'PING'}, 1200);
+        if(r && r.type === 'PONG') return true;
+      }catch(e){}
+      await sleep(120);
+    }
+    return false;
+  }
+
+  function collectWrapsInOrder(){
+    const stage = document.getElementById('stage');
+    if(!stage) return [];
+    const seq = [];
+    for(const docId of ORDER){
+      const wraps = Array.from(stage.querySelectorAll('.framewrap[data-doc="'+docId+'"]'));
+      // ordena por instância numérica
+      wraps.sort((a,b)=> (parseInt(a.dataset.inst||'0',10) - parseInt(b.dataset.inst||'0',10)));
+      for(const w of wraps){
+        // ignora qualquer wrap “sobrando” acima do contador atual
+        try{
+          if(window.__unifiedState && window.__unifiedState.counts && parseInt(w.dataset.inst||'0',10) > (window.__unifiedState.counts[docId]||0)) continue;
+        }catch(e){}
+        const iframe = w.querySelector('iframe');
+        if(iframe) seq.push({docId, inst: (w.dataset.inst||'1'), iframe});
+      }
+    }
+    return seq;
+  }
+
+  function sanitizeHtmlForViewer(html){
+    // Evita que scripts rodem na aba de visualização
+    // (mantém estilos e marcação para impressão)
+    try{
+      // remove scripts inline e externos
+      html = html.replace(/<script\b[\s\S]*?<\/script>/gi, '');
+      // remove listeners inline on*
+      html = html.replace(/\son\w+\s*=\s*(\".*?\"|'.*?'|[^\s>]+)/gi, '');
+      // remove botões/links de VOLTAR (não devem aparecer na visualização unificada)
+      html = html.replace(/<button\b[^>]*>\s*VOLTAR\s*<\/button>/gi, '');
+      html = html.replace(/<a\b[^>]*>\s*VOLTAR\s*<\/a>/gi, '');
+      // injeta CSS defensivo para esconder qualquer "voltar" residual e evitar cortes na impressão
+      const inject = `<style>
+        /* viewer-unificado: esconder controles */
+        #btnVoltar, #btn_voltar, #voltar, .btn-voltar, .voltar, button[aria-label="VOLTAR"]{display:none !important;}
+
+        /* Anti-folha-em-branco (documentos internos):
+           alguns HTMLs (ex.: CARTA ANS) usam page-break-after: always em TODAS as páginas,
+           inclusive na última, o que gera uma folha em branco extra no print.
+           Mantemos as quebras internas, mas removemos a quebra APÓS a última página.
+        */
+        @media print{
+          #btnVoltar, #btn_voltar, #voltar, .btn-voltar, .voltar{display:none !important;}
+          .page:last-child,
+          .a4:last-child,
+          .A4:last-child,
+          .sheet:last-child,
+          .folha:last-child,
+          .paper:last-child,
+          .pg:last-child{
+            page-break-after:auto !important;
+            break-after:auto !important;
+          }
+          /* fallback para marcação sem classes */
+          [style*="page-break-after: always"]:last-child{page-break-after:auto !important;}
+          [style*="break-after: page"]:last-child{break-after:auto !important;}
+        }
+      </style>`;
+      if(/<\/head>/i.test(html)){
+        html = html.replace(/<\/head>/i, inject + '</head>');
+      }else{
+        html = inject + html;
+      }
+    }catch(e){}
+    return html;
+  }
+
+    function buildViewerHtml(pages){
+    // Viewer SEM iframe:
+    // - Usa o HTML exportado pelas abas (EXPORT_HTML dentro dos iframes do stage)
+    // - Divide por páginas fixas (.a4/.A4/.sheet). Cada uma vira uma folha A4 real
+    // - NÃO envolve a .a4 em outro container (evita deslocar elementos absolutos do TERMO DE CARÊNCIA)
+    // - Escopa CSS por documento para não vazar estilos entre documentos
+    // - Remove scripts/UI para evitar travas e “sobras” que viram páginas brancas
+
+    function scopeCss(cssText, scopeSel){
+      return String(cssText||'').replace(/(^|}\s*)([^{@}][^{]*?)\s*\{/g, (m, pre, sels) => {
+        const scoped = sels
+          .split(',')
+          .map(s => s.trim())
+          .filter(Boolean)
+          .map(s => {
+            if(s.startsWith('@')) return s;
+            if(s.startsWith(scopeSel)) return s;
+            if(s === 'html' || s === 'body' || s.startsWith('html ') || s.startsWith('body ')) return scopeSel;
+            if(s.startsWith(':root')) return scopeSel;
+            return scopeSel + ' ' + s;
+          })
+          .join(', ');
+        return pre + scoped + '{';
+      });
+    }
+
+    function addClassesToOuterHtml(outer, extraClass){
+      // Adiciona classes no primeiro tag do outerHTML sem mudar a hierarquia interna
+      // (mantém posicionamento absoluto dentro da .a4)
+      if(!outer) return outer;
+      // se já tem class=""
+      if(/<\w+[^>]*\sclass=/.test(outer)){
+        return outer.replace(/(<\w+[^>]*\sclass=["'])([^"']*)(["'])/i, (m,a,b,c)=> a + b + ' ' + extraClass + c);
+      }
+      // se não tem class=""
+      return outer.replace(/<(\w+)([^>]*)>/, (m,tag,rest)=> `<${tag}${rest} class="${extraClass}">`);
+    }
+
+    function extractDocParts(htmlStr){
+      const parser = new DOMParser();
+      const d = parser.parseFromString(String(htmlStr||''), 'text/html');
+
+      // junta CSS interno
+      let css = '';
+      d.querySelectorAll('style').forEach(st => { css += '\n' + (st.textContent || ''); });
+
+      // IMPORTANTÍSSIMO (TERMO DE CARÊNCIA e outros):
+      // alguns documentos aplicam posições via CSS variables gravadas no <html style="--x_...:...">.
+      // Ao extrair apenas a .a4/.sheet, perderíamos essas vars.
+      // Portanto, copiamos as CSS vars do atributo style do <html> para dentro do CSS (como :root{...}),
+      // e o scoper transforma em .doc-X{...} no viewer.
+      try{
+        const htmlStyle = (d.documentElement && d.documentElement.getAttribute('style')) ? d.documentElement.getAttribute('style') : '';
+        if(htmlStyle && htmlStyle.includes('--')){
+          const decls = (htmlStyle.match(/--[A-Za-z0-9_-]+\s*:\s*[^;]+;?/g) || []).join(' ');
+          if(decls.trim()) css += `\n:root{ ${decls} }`;
+        }
+      }catch(e){}
+
+      // remove scripts para não reexecutar JS no viewer
+      d.querySelectorAll('script').forEach(s => s.remove());
+
+      // remove elementos de UI que podem sobrar e interferir no layout
+      const kill = [
+        '#btnVoltar','.preview-footer','.no-print','.controls','.toolbar',
+        '#calibrationPanel','#btnModoCalibracao','.calibration','.modo-calibracao',
+        'button'
+      ];
+      kill.forEach(sel => d.querySelectorAll(sel).forEach(el => el.remove()));
+
+      const body = d.body || d.documentElement;
+      const a4 = body.querySelectorAll('.a4, .A4, .sheet');
+      const pagesOut = [];
+
+      if(a4 && a4.length){
+        a4.forEach(el => pagesOut.push(el.outerHTML));
+      }else{
+        // fallback: se não tiver wrapper de página, usa o body inteiro como uma página
+        pagesOut.push(body.innerHTML);
+      }
+      return { css, pagesOut };
+    }
+
+    const baseCss = `
+      <style>
+        html,body{margin:0;padding:0;background:#fff;color:#000;}
+        /* folha A4 real */
+        .print-page{
+          width:210mm;
+          height:297mm;
+          background:#fff;
+          page-break-after:always;
+          break-after:page;
+          overflow:hidden;
+          position:relative;
+        }
+        .print-page:last-child{
+          page-break-after:auto;
+          break-after:auto;
+        }
+        /* Centralização somente na tela */
+        @media screen{
+          body{
+            background:#111;
+            display:flex;
+            flex-direction:column;
+            align-items:center;
+          }
+          .print-page{
+            margin:12px 0;
+            box-shadow:0 0 0 1px rgba(0,0,0,.20);
+          }
+        }
+        @media print{
+          @page{margin:0; size:A4;}
+          body{-webkit-print-color-adjust:exact; print-color-adjust:exact; background:#fff;}
+          .print-page{box-shadow:none; margin:0;}
+        }
+      </style>
+    `;
+
+    let scopedStyles = '';
+    let outPages = '';
+
+    pages.forEach((p, docIdx) => {
+      const scope = `.doc-${docIdx}`;
+      const parts = extractDocParts(p.html || '');
+      scopedStyles += `<style>${scopeCss(parts.css, scope)}</style>`;
+
+      parts.pagesOut.forEach(pageHtml => {
+        // se veio de .a4/.sheet, não vamos criar wrapper extra.
+        // vamos adicionar classes direto no elemento raiz da página.
+        if(pageHtml && /class=/.test(pageHtml) && /(\ba4\b|\bA4\b|\bsheet\b)/.test(pageHtml)){
+          const cls = `print-page ${scope.substring(1)}`;
+          outPages += addClassesToOuterHtml(pageHtml, cls) + '\n';
+        }else{
+          // fallback: envolve em uma folha A4 (caso raro)
+          outPages += `<div class="print-page ${scope.substring(1)}">${pageHtml||''}</div>\n`;
+        }
+      });
+    });
+
+    const head = baseCss + scopedStyles;
+    const body = outPages || `<div class="print-page"></div>`;
+    return `<!doctype html><html><head><meta charset="utf-8"><title>Documento Unificado</title>${head}</head><body>${body}</body></html>`;
+  }
+
+
+  function openPreparing(){
+    const w = window.open('', '_blank');
+    if(!w) return null;
+    try{
+      w.document.open();
+      w.document.write('<!doctype html><meta charset="utf-8"><title>Preparando…</title><body style="font-family:Arial;padding:18px">Preparando visualização…</body>');
+      w.document.close();
+    }catch(e){}
+    return w;
+  }
+
+  async function buildPagesFromIframes(seq){
+    const pages = [];
+    for(const it of seq){
+      const iframe = it.iframe;
+      if(!iframe) continue;
+
+      // garante que carregou
+      const ok = await ensureReady(iframe);
+      if(!ok){
+        // se não responder, ainda tenta capturar o que tiver
+      }
+
+      // prepara "VER PRÉVIA" dentro do iframe (Bridge V2)
+      try{ await postToIframe(iframe, {type:'PREPARE_PRINT'}, 900); }catch(e){}
+
+      
+// captura HTML via Bridge (evita bloqueio cross-origin em file://)
+try{
+  const resp = await postToIframe(iframe, {type:'EXPORT_HTML'}, 2000);
+  let html = (resp && resp.html) ? String(resp.html) : '';
+  html = sanitizeHtmlForViewer(html);
+  pages.push({docId:it.docId, inst:it.inst, html});
+}catch(e){}
+
+      // restaura visualização (clica VOLTAR dentro do iframe), para não mexer na tela do usuário
+      try{ await postToIframe(iframe, {type:'RESTORE_VIEW'}, 700); }catch(e){}
+    }
+    return pages;
+  }
+
+  let busy = false;
+  async function onVisualizarClick(ev){
+    if(busy) return;
+    busy = true;
+
+    try{
+      ev.preventDefault();
+      ev.stopPropagation();
+
+      const w = openPreparing();
+      if(!w){
+        alert('Permita pop-ups para visualizar/imprimir.');
+        return;
+      }
+
+      const seq = collectWrapsInOrder();
+      const pages = await buildPagesFromIframes(seq);
+
+      // mesmo sem preencher nada, ainda deve abrir (ao menos a estrutura)
+      const htmlViewer = buildViewerHtml(pages);
+      try{
+        w.document.open();
+        w.document.write(htmlViewer);
+        w.document.close();
+      }catch(e){}
+    }catch(err){
+      try{ console.error(err); }catch(_){}
+      try{ alert('Erro ao visualizar. Abra o console (F12) e envie o print do erro.'); }catch(_){}
+    } finally {
+      busy = false;
+    }
+  }
+
+  function attach(){
+    // Remove o botão SALVAR (se existir)
+    try{ const b=document.getElementById('saveUnifiedBtn'); if(b) b.remove(); }catch(e){}
+
+    const btn = document.getElementById('viewUnifiedBtn');
+    if(!btn) return false;
+
+    // Substitui o botão por um clone para remover handlers antigos
+    const clone = btn.cloneNode(true);
+    btn.parentNode.replaceChild(clone, btn);
+    clone.addEventListener('click', onVisualizarClick, {capture:true});
+
+    return true;
+  }
+
+  const t = setInterval(()=>{ if(attach()) clearInterval(t); }, 120);
+})();
+</script>
+
+</body>
+</html>
