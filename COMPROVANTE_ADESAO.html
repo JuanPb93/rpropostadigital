@@ -101,7 +101,7 @@
   position:absolute; left:0; top:-24px;
   background:rgba(17,24,39,.92);
   color:#fff;
-  font-size:11px;
+  font-size:12px;
   padding:4px 8px;
   border-radius:999px;
   display:none;
@@ -365,6 +365,12 @@
   text-overflow: clip !important;
   white-space: nowrap !important;
   font-size: 12px !important;
+}
+
+/* === v5: reduzir somente o campo de reajuste no visualizador/documento === */
+#out_reaj{
+  font-size: 11px !important;
+  line-height: 1 !important;
 }
 
 
@@ -703,6 +709,12 @@ button[onclick*="toggleCalib"]{ display:none !important; }
 <script>
   const $ = (id)=>document.getElementById(id);
   const IMED_NOTE = "(+ PROPORCIONAL DE DIAS ATIVOS DE ACORDO COM VALOR DO PLANO)";
+  const REAJ_NOTE = "(PODE ACONTECER ATÉ 60 DIAS APÓS O ANIVERSÁRIO DO CONTRATO*)";
+
+  function buildReajText(month){
+    const m = String(month || "").trim();
+    return m ? (m + " " + REAJ_NOTE) : "";
+  }
 
 
   // Ajusta o tamanho da fonte do campo do documento para caber na largura (sem cortar texto)
@@ -995,7 +1007,7 @@ button[onclick*="toggleCalib"]{ display:none !important; }
     // Campo 6: DIA X
     setOut("out_venc", vencDia || "");
 
-    // Campo 7: mês
+    // Campo 7: mês + texto obrigatório
     setOut("out_reaj", reajMes || "");
 
     // Campo 8: mês opcional
@@ -1092,7 +1104,7 @@ button[onclick*="toggleCalib"]{ display:none !important; }
     $("contrato").addEventListener("change", ()=>{
       const c = $("contrato").value;
       $("venc_dia").value = c ? (vencMap[c] || "") : "";
-      $("reaj_mes").value = c ? (reajMap[c] || "") : "";
+      $("reaj_mes").value = c ? buildReajText(reajMap[c] || "") : "";
       syncOutputs(); validate(false);
     });
 

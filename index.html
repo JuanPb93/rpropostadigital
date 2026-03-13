@@ -26,7 +26,23 @@
   .item.active{background:rgba(255,122,0,.12);border-color:rgba(255,122,0,.45);}
   .item .k{font-weight:900;}
   .item .d{font-size:12px;color:var(--muted);margin-top:4px;line-height:1.25;}
-  .masterbtn{width:100%;margin-top:14px;padding:18px 14px;border-radius:16px;border:2px solid rgba(255,122,0,.65);background:rgba(255,122,0,.14);color:#ffb26b;font-weight:900;font-size:22px;letter-spacing:.4px;cursor:pointer;text-align:left;}
+  .masterbtn{
+  width:100%;
+  margin-top:14px;
+  padding:18px 14px;
+  border-radius:16px;
+  border:2px solid rgba(255,122,0,.65);
+  background:rgba(255,122,0,.14);
+  color:#ffb26b;
+  font-weight:900;
+  font-size:22px;
+  letter-spacing:.4px;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+}
   .masterbtn:hover{background:rgba(255,122,0,.18);}
   .masterbtn:disabled{opacity:.55;cursor:not-allowed;}
   .foot{display:none;}
@@ -55,7 +71,41 @@
   .modal .actions{display:flex;justify-content:flex-end;gap:10px;margin-top:12px;}
   .modal .closeBtn{padding:10px 14px;border-radius:999px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:var(--ink);font-weight:900;cursor:pointer;}
   @media (max-width:980px){.app{flex-direction:column;}.sidebar{width:100%;max-width:none;height:auto;position:relative;}.stage{height:72vh;}}
+
+  /* Anexos */
+  .attachBox{margin-top:10px;padding:12px;border:1px solid var(--border);border-radius:14px;background:rgba(255,255,255,.03);}
+  .attachTitle{font-weight:900;margin:0 0 8px 0;}
+  .attachBtn{width:100%;padding:12px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.18);background:rgba(34,197,94,.22);color:#bbf7d0;font-weight:900;cursor:pointer;}
+  .attachBtn:hover{background:rgba(34,197,94,.28);}
+  .attachActions{display:flex;gap:8px;}
+  .attachActions .attachBtn{width:auto;flex:1;}
+  .prepBtn{background:rgba(255,122,0,.18);color:#ffd7b0;border-color:rgba(255,255,255,.18);}
+  .prepBtn:hover{background:rgba(255,122,0,.24);}
+  .prepBtn[disabled]{opacity:.65;cursor:not-allowed;}
+  .attachActions .prepBtn{width:46px;flex:0 0 46px;padding:0;display:flex;align-items:center;justify-content:center;font-size:20px;line-height:1;}
+  .prepBtn.is-busy{animation:spin 0.9s linear infinite;}
+  @keyframes spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+
+
+
+  .attachList{margin-top:10px;display:flex;flex-direction:column;gap:8px;}
+  .attachRow{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.03);}
+  .attachName{flex:1;min-width:0;font-size:12px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .attachMeta{font-size:12px;color:var(--muted);margin-left:6px;white-space:nowrap;}
+  .attachRm{border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:#fecaca;border-radius:10px;padding:6px 10px;font-weight:900;cursor:pointer;}
+  .attachRm:hover{background:rgba(255,255,255,.10);}
+  .attachNote{margin-top:8px;font-size:12px;color:var(--muted);line-height:1.35;}
+
 </style>
+  <!-- PDF.js via CDN (única parte online). Se não carregar, PDFs continuam como link. -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+  <script>
+    try{
+      if(window.pdfjsLib){
+        pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js";
+      }
+    }catch(e){}
+  </script>
 </head>
 <body>
 <div class="app">
@@ -70,6 +120,16 @@
 
     <div class="menu" id="menu"></div>
 <button id="viewUnifiedBtn" class="masterbtn" type="button">VISUALIZAR</button>
+
+    <div class="attachBox">
+<div class="attachActions">
+<button id="attachBtn" class="attachBtn" type="button">ANEXAR ARQUIVOS</button>
+<button id="prepAttachBtn" class="prepBtn" type="button" title="Atualizar anexos (pré-renderizar)" aria-label="Atualizar anexos">⟳</button>
+</div>
+      <input id="attachInput" type="file" accept="application/pdf,image/*" multiple style="display:none"/>
+      <div id="attachList" class="attachList"></div>
+</div>
+
 
     <div class="foot"></div>
   </aside>
@@ -430,6 +490,278 @@
     const htmlStr = buildUnifiedHtml(seq);
     downloadUnifiedHtml(htmlStr);
   }
+
+// =========================
+// ANEXOS (PDF / IMAGEM)
+// - Mantém em memória (não usa localStorage, para não pesar/estourar limite)
+// - Imagens entram como páginas A4 no VISUALIZAR (imprimíveis via Ctrl+P)
+// - PDFs: nesta versão offline, entram como página de aviso + link para abrir o PDF em outra aba
+// =========================
+const attachBtn = document.getElementById('attachBtn');
+const attachInput = document.getElementById('attachInput');
+const attachList = document.getElementById('attachList');
+
+const attachments = (window.__attachments = window.__attachments || []);
+let attachSeq = window.__attachSeq || 1;
+
+// Cache para pré-processar anexos (PDF -> páginas) e evitar travar o VISUALIZAR
+let __attachCache = window.__attachCache || { dirty:true, pages:[] };
+window.__attachCache = __attachCache;
+
+function bytesToMB(b){ return (b/1024/1024).toFixed(2); }
+
+function renderAttachList(){
+  if(!attachList) return;
+  attachList.innerHTML = '';
+  if(!attachments.length){
+    return;
+  }
+  attachments.forEach(att => {
+    const row = document.createElement('div');
+    row.className = 'attachRow';
+
+    const name = document.createElement('div');
+    name.className = 'attachName';
+    name.title = att.name || '';
+    name.textContent = att.name || '(sem nome)';
+
+    const meta = document.createElement('div');
+    meta.className = 'attachMeta';
+    const kind = att.kind === 'image' ? 'IMG' : (att.kind === 'pdf' ? 'PDF' : 'ARQ');
+    meta.textContent = `${kind} • ${(att.sizeMB || '—')} MB`;
+
+    const rm = document.createElement('button');
+    rm.type = 'button';
+    rm.className = 'attachRm';
+    rm.textContent = '🗑 Remover';
+    rm.addEventListener('click', () => {
+      try{
+        const idx = attachments.findIndex(x => x.id === att.id);
+        if(idx >= 0){
+          try{ if(attachments[idx].blobUrl) URL.revokeObjectURL(attachments[idx].blobUrl); }catch(e){}
+          attachments.splice(idx,1);
+          try{ __attachCache.dirty = true; __attachCache.pages = []; }catch(e){}
+          renderAttachList();
+        }
+      }catch(e){}
+    });
+
+    row.appendChild(name);
+    row.appendChild(meta);
+    row.appendChild(rm);
+    attachList.appendChild(row);
+  });
+}
+
+function readFileAsDataURL(file){
+  return new Promise((resolve, reject) => {
+    const fr = new FileReader();
+    fr.onerror = () => reject(new Error('file_read_error'));
+    fr.onload = () => resolve(String(fr.result || ''));
+    fr.readAsDataURL(file);
+  });
+}
+
+async function addFiles(fileList){
+  try{ __attachCache.dirty = true; }catch(e){}
+
+  const files = Array.from(fileList || []);
+  if(!files.length) return;
+
+  for(const f of files){
+    const type = (f.type || '').toLowerCase();
+    const isPdf = type === 'application/pdf' || (f.name || '').toLowerCase().endsWith('.pdf');
+    const isImg = type.startsWith('image/') || /\.(png|jpg|jpeg|webp)$/i.test(f.name || '');
+
+    const id = 'ATT_' + Date.now() + '_' + (attachSeq++);
+    window.__attachSeq = attachSeq;
+
+    if(isImg){
+      let dataUrl = '';
+      try{ dataUrl = await readFileAsDataURL(f); }catch(e){ dataUrl = ''; }
+      attachments.push({
+        id,
+        kind: 'image',
+        name: f.name || 'imagem',
+        sizeMB: bytesToMB(f.size || 0),
+        dataUrl
+      });
+    } else if(isPdf){
+      let blobUrl = '';
+      try{ blobUrl = URL.createObjectURL(f); }catch(e){ blobUrl = ''; }
+      attachments.push({
+        id,
+        kind: 'pdf',
+        name: f.name || 'pdf',
+        sizeMB: bytesToMB(f.size || 0),
+        blobUrl
+      });
+    } else {
+      attachments.push({
+        id,
+        kind: 'unknown',
+        name: f.name || 'arquivo',
+        sizeMB: bytesToMB(f.size || 0),
+        note: 'Formato não suportado'
+      });
+    }
+  }
+
+  renderAttachList();
+}
+
+function escapeHtml(txt){
+  return String(txt||'')
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
+}
+
+function attachmentToHtmlDoc(att){
+  const name = escapeHtml(att.name || '');
+  const baseStyle = `
+    <style>
+      html,body{margin:0;padding:0;background:#fff;color:#000;}
+      .a4{width:210mm;height:297mm;position:relative;overflow:hidden;background:#fff;}
+      .wrap{position:absolute;inset:0;padding:10mm;display:flex;align-items:center;justify-content:center;}
+      .img{max-width:100%;max-height:100%;object-fit:contain;}
+      .pdfBox{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;border:2px dashed #999;border-radius:10px;font-family:Arial;}
+      .pdfBox h1{margin:0 0 8px;font-size:18px;}
+      .pdfBox p{margin:0 0 10px;font-size:12px;opacity:.8;text-align:center;max-width:160mm;line-height:1.35;}
+      .pdfBox a{display:inline-block;margin-top:6px;padding:10px 12px;border-radius:10px;background:#111;color:#fff;text-decoration:none;font-weight:700;}
+    </style>
+  `;
+  if(att.kind === 'image' && att.dataUrl){
+    const src = String(att.dataUrl||'').replace(/"/g,'%22');
+    return `<!doctype html><html><head><meta charset="utf-8">${baseStyle}</head><body><div class="a4"><div class="wrap"><img class="img" alt="${name}" src="${src}"></div></div></body></html>`;
+  }
+  if(att.kind === 'pdf'){
+    const href = att.blobUrl ? att.blobUrl : '';
+    const link = href ? `<a href="${href}" target="_blank" rel="noopener">ABRIR PDF (nova aba)</a>` : '';
+    return `<!doctype html><html><head><meta charset="utf-8">${baseStyle}</head><body><div class="a4"><div class="wrap"><div class="pdfBox">
+      <h1>PDF ANEXADO</h1>
+      <p><b>${name}</b><br>Este PDF foi anexado ao pacote. Nesta versão offline, ele aparece como link (sem renderização dentro do pacote).</p>
+      ${link}
+    </div></div></div></body></html>`;
+  }
+  return `<!doctype html><html><head><meta charset="utf-8">${baseStyle}</head><body><div class="a4"><div class="wrap"><div class="pdfBox">
+      <h1>ANEXO</h1><p><b>${name}</b><br>Formato não suportado para visualização/impressão no pacote.</p>
+    </div></div></div></body></html>`;
+}
+
+// Nova função: converte PDF em páginas A4 como imagens (usa PDF.js via CDN)
+async function pdfToPages(att){
+  try{
+    if(!att || att.kind !== 'pdf' || !att.blobUrl) return attachmentToHtmlDoc(att);
+    if(!window.pdfjsLib || !pdfjsLib.getDocument) return attachmentToHtmlDoc(att);
+
+    const loadingTask = pdfjsLib.getDocument(att.blobUrl);
+    const pdf = await loadingTask.promise;
+
+    const name = escapeHtml(att.name || 'pdf');
+    const baseStyle = `
+      <style>
+        html,body{margin:0;padding:0;background:#fff;color:#000;}
+        .a4{width:210mm;height:297mm;position:relative;overflow:hidden;background:#fff;}
+        .wrap{position:absolute;inset:0;padding:10mm;display:flex;align-items:center;justify-content:center;}
+        .img{max-width:100%;max-height:100%;object-fit:contain;}
+      </style>
+    `;
+
+    let bodyHtml = '';
+    for(let i=1; i<=pdf.numPages; i++){
+      const page = await pdf.getPage(i);
+
+      // Qualidade máxima para visualização/impressão
+      const viewport = page.getViewport({ scale: 4.0 });
+
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d', { alpha:false });
+      canvas.width = Math.ceil(viewport.width);
+      canvas.height = Math.ceil(viewport.height);
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+
+      await page.render({ canvasContext: ctx, viewport }).promise;
+
+      const imgData = canvas.toDataURL('image/png');
+
+      bodyHtml += `<div class="a4"><div class="wrap"><img class="img" alt="${name} (p.${i})" src="${imgData}"></div></div>`;
+    }
+
+    return `<!doctype html><html><head><meta charset="utf-8">${baseStyle}</head><body>${bodyHtml}</body></html>`;
+  }catch(e){
+    try{ console.error('Erro ao processar PDF:', e); }catch(_){}
+    return attachmentToHtmlDoc(att);
+  }
+}
+
+// Agora os anexos retornam páginas prontas (PDF vira imagem por página)
+window.__getAttachmentPages = async function(){
+  try{
+    // Se já foram processados e nada mudou, reaproveita
+    try{
+      if(__attachCache && __attachCache.dirty === false && Array.isArray(__attachCache.pages) && __attachCache.pages.length){
+        return __attachCache.pages;
+      }
+    }catch(e){}
+
+    const out = [];
+    for(const att of (attachments || [])){
+      if(att && att.kind === 'pdf'){
+        const html = await pdfToPages(att);
+        out.push({ docId:'anexo', inst: att.id, html });
+      }else{
+        out.push({ docId:'anexo', inst: att.id, html: attachmentToHtmlDoc(att) });
+      }
+    }
+
+    try{ __attachCache.pages = out; __attachCache.dirty = false; }catch(e){}
+    return out;
+  }catch(e){
+    return [];
+  }
+};
+
+if(attachBtn && attachInput){
+  const prepBtn = document.getElementById('prepAttachBtn');
+
+  attachBtn.addEventListener('click', () => { try{ attachInput.click(); }catch(e){} });
+
+  attachInput.addEventListener('change', async () => {
+    try{ await addFiles(attachInput.files); }catch(e){}
+    try{ attachInput.value = ''; }catch(e){}
+  });
+
+  // Botão: pré-processa anexos (PDF -> páginas) para o VISUALIZAR ficar instantâneo
+  if(prepBtn){
+    prepBtn.addEventListener('click', async () => {
+      const oldTxt = prepBtn.textContent;
+      try{
+        prepBtn.disabled = true;
+        prepBtn.textContent = '⟳';
+        prepBtn.classList.add('is-busy');
+        try{ __attachCache.dirty = true; __attachCache.pages = []; }catch(e){}
+        // Processa agora e guarda em cache
+        try{ await window.__getAttachmentPages(); }catch(e){}
+        prepBtn.classList.remove('is-busy');
+        prepBtn.textContent = '✓';
+        // volta ao texto original depois de um tempinho
+        setTimeout(() => { try{ prepBtn.textContent = oldTxt; }catch(e){} }, 1200);
+      }catch(e){
+        try{ prepBtn.textContent = oldTxt; }catch(_){}
+      }finally{
+        try{ prepBtn.classList.remove('is-busy'); }catch(e){}
+        try{ prepBtn.disabled = false; }catch(e){}
+      }
+    });
+  }
+}
+renderAttachList();
+
+
 // init
   buildMenu();
   if(saveBtn) saveBtn.addEventListener('click', onSave);
@@ -572,7 +904,89 @@
     return html;
   }
 
-    function buildViewerHtml(pages){
+    
+  // Converte o HTML exportado de uma aba em "folhas" prontas para o viewer (com CSS escopado por documento)
+  function _scopeCss(cssText, scopeSel){
+    return String(cssText||'').replace(/(^|}\s*)([^{@}][^{]*?)\s*\{/g, (m, pre, sels) => {
+      const scoped = sels
+        .split(',')
+        .map(s => s.trim())
+        .filter(Boolean)
+        .map(s => {
+          if(s.startsWith('@')) return s;
+          if(s.startsWith(scopeSel)) return s;
+          if(s === 'html' || s === 'body' || s.startsWith('html ') || s.startsWith('body ')) return scopeSel;
+          if(s.startsWith(':root')) return scopeSel;
+          return scopeSel + ' ' + s;
+        })
+        .join(', ');
+      return pre + scoped + '{';
+    });
+  }
+
+  function _addClassesToOuterHtml(outer, extraClass){
+    if(!outer) return outer;
+    if(/<\w+[^>]*\sclass=/.test(outer)){
+      return outer.replace(/(<\w+[^>]*\sclass=["'])([^"']*)(["'])/i, (m,a,b,c)=> a + b + ' ' + extraClass + c);
+    }
+    return outer.replace(/<(\w+)([^>]*)>/, (m,tag,rest)=> `<${tag}${rest} class="${extraClass}">`);
+  }
+
+  function _extractDocParts(htmlStr){
+    const parser = new DOMParser();
+    const d = parser.parseFromString(String(htmlStr||''), 'text/html');
+
+    let css = '';
+    d.querySelectorAll('style').forEach(st => { css += '\\n' + (st.textContent || ''); });
+
+    try{
+      const htmlStyle = (d.documentElement && d.documentElement.getAttribute('style')) ? d.documentElement.getAttribute('style') : '';
+      if(htmlStyle && htmlStyle.includes('--')){
+        const decls = (htmlStyle.match(/--[A-Za-z0-9_-]+\\s*:\\s*[^;]+;?/g) || []).join(' ');
+        if(decls.trim()) css += `\\n:root{ ${decls} }`;
+      }
+    }catch(e){}
+
+    d.querySelectorAll('script').forEach(s => s.remove());
+
+    const kill = [
+      '#btnVoltar','.preview-footer','.no-print','.controls','.toolbar',
+      '#calibrationPanel','#btnModoCalibracao','.calibration','.modo-calibracao',
+      'button'
+    ];
+    kill.forEach(sel => d.querySelectorAll(sel).forEach(el => el.remove()));
+
+    const body = d.body || d.documentElement;
+    const a4 = body.querySelectorAll('.a4, .A4, .sheet');
+    const pagesOut = [];
+
+    if(a4 && a4.length){
+      a4.forEach(el => pagesOut.push(el.outerHTML));
+    }else{
+      pagesOut.push(body.innerHTML);
+    }
+    return { css, pagesOut };
+  }
+
+  function docHtmlToViewerPayload(docHtml, docIdx){
+    const scopeClass = `doc-${docIdx}`;
+    const scopeSel = `.${scopeClass}`;
+    const parts = _extractDocParts(docHtml || '');
+    const scopedCss = _scopeCss(parts.css, scopeSel);
+
+    const pagesHtml = [];
+    parts.pagesOut.forEach(pageHtml => {
+      if(pageHtml && /class=/.test(pageHtml) && /(\\ba4\\b|\\bA4\\b|\\bsheet\\b)/.test(pageHtml)){
+        pagesHtml.push(_addClassesToOuterHtml(pageHtml, `print-page ${scopeClass}`));
+      }else{
+        pagesHtml.push(`<div class="print-page ${scopeClass}">${pageHtml||''}</div>`);
+      }
+    });
+
+    return { scopedCss, pagesHtml };
+  }
+
+function buildViewerHtml(pages){
     // Viewer SEM iframe:
     // - Usa o HTML exportado pelas abas (EXPORT_HTML dentro dos iframes do stage)
     // - Divide por páginas fixas (.a4/.A4/.sheet). Cada uma vira uma folha A4 real
@@ -674,16 +1088,9 @@
         }
         /* Centralização somente na tela */
         @media screen{
-          body{
-            background:#111;
-            display:flex;
-            flex-direction:column;
-            align-items:center;
-          }
-          .print-page{
-            margin:12px 0;
-            box-shadow:0 0 0 1px rgba(0,0,0,.20);
-          }
+          /* Espaçamento visual entre páginas (somente tela) */
+          body{background:#111;display:flex;flex-direction:column;align-items:center;gap:12px;padding:12px 0;}
+          .print-page{margin:0;box-shadow:0 0 0 1px rgba(0,0,0,.20);}
         }
         @media print{
           @page{margin:0; size:A4;}
@@ -731,6 +1138,76 @@
     return w;
   }
 
+
+  function openViewerShell(){
+    const w = window.open('', '_blank');
+    if(!w) return null;
+    try{
+      const baseCss = `
+        <style>
+          html,body{margin:0;padding:0;background:#fff;color:#000;}
+          .print-page{
+            width:210mm;
+            height:297mm;
+            background:#fff;
+            page-break-after:always;
+            break-after:page;
+            overflow:hidden;
+            position:relative;
+          }
+          .print-page:last-child{page-break-after:auto;break-after:auto;}
+          @media screen{
+            body{background:#111;}
+            /* Espaçamento visual entre páginas (somente tela) */
+            #__pages{display:flex;flex-direction:column;align-items:center;gap:12px;padding:12px 0;}
+            .print-page{margin:0;box-shadow:0 0 0 1px rgba(0,0,0,.20);}
+          }
+          @media print{
+            @page{margin:0; size:A4;}
+            body{-webkit-print-color-adjust:exact; print-color-adjust:exact; background:#fff;}
+            #__pages{display:block;gap:0;padding:0;}
+            .print-page{box-shadow:none; margin:0;}
+          }
+        </style>
+      `;
+      w.document.open();
+      w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Documento Unificado</title>${baseCss}</head><body><div id="__pages"></div>
+<script>
+  (function(){
+    const pagesEl = document.getElementById('__pages');
+    window.__appendDoc = function(scopedCss, pagesHtml){
+      try{
+        if(scopedCss){
+          const st = document.createElement('style');
+          st.textContent = String(scopedCss);
+          document.head.appendChild(st);
+        }
+        if(Array.isArray(pagesHtml)){
+          for(const h of pagesHtml){
+            if(h) pagesEl.insertAdjacentHTML('beforeend', String(h));
+          }
+        }
+      }catch(e){}
+    };
+    window.__appendRawPages = function(pagesHtml){
+      try{
+        if(Array.isArray(pagesHtml)){
+          for(const h of pagesHtml){
+            if(h) pagesEl.insertAdjacentHTML('beforeend', String(h));
+          }
+        }
+      }catch(e){}
+    };
+  })();
+<\/script></body></html>`);
+      w.document.close();
+    }catch(e){}
+    return w;
+  }
+
+  function nextTick(){
+    return new Promise(r=>setTimeout(r,0));
+  }
   async function buildPagesFromIframes(seq){
     const pages = [];
     for(const it of seq){
@@ -779,13 +1256,29 @@ try{
       const seq = collectWrapsInOrder();
       const pages = await buildPagesFromIframes(seq);
 
-      // mesmo sem preencher nada, ainda deve abrir (ao menos a estrutura)
-      const htmlViewer = buildViewerHtml(pages);
+      try{
+        const extra = (window.__getAttachmentPages ? await window.__getAttachmentPages() : []) || [];
+        for(const p of extra){
+          if(p && p.html) pages.push({docId:'anexo', inst:'1', html:String(p.html)});
+        }
+      }catch(e){}
+
+      const html = buildViewerHtml(pages);
       try{
         w.document.open();
-        w.document.write(htmlViewer);
+        w.document.write(html);
         w.document.close();
-      }catch(e){}
+      }catch(e){
+        try{ w.close(); }catch(_){}
+        const alt = window.open('', '_blank');
+        if(alt){
+          alt.document.open();
+          alt.document.write(html);
+          alt.document.close();
+        }else{
+          alert('Permita pop-ups para visualizar/imprimir.');
+        }
+      }
     }catch(err){
       try{ console.error(err); }catch(_){}
       try{ alert('Erro ao visualizar. Abra o console (F12) e envie o print do erro.'); }catch(_){}
@@ -793,6 +1286,7 @@ try{
       busy = false;
     }
   }
+
 
   function attach(){
     // Remove o botão SALVAR (se existir)
