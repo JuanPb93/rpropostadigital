@@ -493,13 +493,14 @@ button[onclick*="toggleCalib"]{ display:none !important; }
       <div>
         <label>CONTRATO *</label>
         <select id="contrato">
-          <option value="">SELECIONE…</option>
-          <!-- mantém sua lista atual -->
-          <option value="ACIP">ACIP</option>
+          <option value="">SELECIONE...</option>
           <option value="ACIP INTERMED">ACIP INTERMED</option>
+          <option value="ASSIFPI INTERMED">ASSIFPI INTERMED</option>
+          <option value="SINTUFPI INTERMED">SINTUFPI INTERMED</option>
+          <option value="SISMUJOF">SISMUJOF</option>
+          <option value="ACIP">ACIP</option>
           <option value="ADCESP">ADCESP</option>
           <option value="ASSIFPI">ASSIFPI</option>
-          <option value="ASSIFPI INTERMED">ASSIFPI INTERMED</option>
           <option value="CAU">CAU</option>
           <option value="CDL">CDL</option>
           <option value="CRECI">CRECI</option>
@@ -507,13 +508,11 @@ button[onclick*="toggleCalib"]{ display:none !important; }
           <option value="CRMV">CRMV</option>
           <option value="FESPPI">FESPPI</option>
           <option value="SENATEPI">SENATEPI</option>
-          <option value="SISMUJOF">SISMUJOF</option>
           <option value="SINDEPOL">SINDEPOL</option>
           <option value="SINPRO">SINPRO</option>
-          <option value="SINSEPI">SINSEPI</option>
+          <option value="SINSEP">SINSEP</option>
           <option value="SINTEPI">SINTEPI</option>
           <option value="SINTUFPI">SINTUFPI</option>
-          <option value="SINTUFPI INTERMED">SINTUFPI INTERMED</option>
         </select>
       </div>
       <div>
@@ -787,26 +786,26 @@ button[onclick*="toggleCalib"]{ display:none !important; }
     }
   }
 
-  const contractItems = [
-    ["CAU", "5", "ABRIL"],
-    ["CRF", "5", "JULHO"],
-    ["SINSEPI", "5", "JULHO"],
-    ["SINTUFPI", "5", "SETEMBRO"],
-    ["ASSIFPI", "5", "OUTUBRO"],
-    ["SINTEPI", "5", "OUTUBRO"],
-    ["SINPRO", "6", "JANEIRO"],
-    ["ACIP", "7", "FEVEREIRO"],
-    ["CDL", "7", "AGOSTO"],
-    ["SENATEPI", "9", "MARÇO"],
-    ["CRMV", "9", "JULHO"],
-    ["CRECI", "10", "JULHO"],
-    ["FESPPI", "10", "OUTUBRO"],
-    ["ASSIFPI INTERMED", "11", "MARÇO"],
-    ["SISMUJOF", "11", "ABRIL"],
-    ["SINTUFPI INTERMED", "11", "ABRIL"],
+    const contractItems = [
     ["ACIP INTERMED", "11", "NOVEMBRO"],
+    ["ASSIFPI INTERMED", "11", "MARÇO"],
+    ["SINTUFPI INTERMED", "11", "ABRIL"],
+    ["SISMUJOF", "11", "ABRIL"],
+    ["ACIP", "7", "FEVEREIRO"],
+    ["ADCESP", "20", "JANEIRO"],
+    ["ASSIFPI", "5", "OUTUBRO"],
+    ["CAU", "5", "ABRIL"],
+    ["CDL", "7", "AGOSTO"],
+    ["CRECI", "10", "JULHO"],
+    ["CRF", "5", "JULHO"],
+    ["CRMV", "9", "JULHO"],
+    ["FESPPI", "10", "OUTUBRO"],
+    ["SENATEPI", "9", "MARÇO"],
     ["SINDEPOL", "19", "JANEIRO"],
-    ["ADCESP", "20", "JANEIRO"]
+    ["SINPRO", "6", "JANEIRO"],
+    ["SINSEP", "5", "JULHO"],
+    ["SINTEPI", "5", "OUTUBRO"],
+    ["SINTUFPI", "5", "SETEMBRO"]
   ];
   const vencMap = {};
   const reajMap = {};
