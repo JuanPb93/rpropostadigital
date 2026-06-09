@@ -106,6 +106,9 @@
       }
     }catch(e){}
   </script>
+  <!-- Geração do PDF final no navegador -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
 <div class="app">
@@ -119,7 +122,7 @@
     </div>
 
     <div class="menu" id="menu"></div>
-<button id="viewUnifiedBtn" class="masterbtn" type="button">VISUALIZAR</button>
+<button id="viewUnifiedBtn" class="masterbtn" type="button">GERAR PDF</button>
 
     <div class="attachBox">
 <div class="attachActions">
@@ -772,11 +775,12 @@ renderAttachList();
 </script>
 
 <script>
-/* Patch V2: VISUALIZAR unificado (abre nova guia com PRÉVIAS em ordem, imprimir via Ctrl+P)
+/* Patch V3: GERAR PDF unificado (abre PDF final no visualizador nativo do navegador)
    - Não altera o restante do sistema
    - Remove listeners antigos do botão VISUALIZAR substituindo o elemento
    - Não bloqueia por validação
    - Evita travar o botão em caso de erro (busy sempre resetado)
+   - Usa html2canvas + jsPDF para baixar/abrir PDF real em vez de depender do Ctrl+P
 */
 (function(){
   if(window.__unifiedViewPatchV2) return;
@@ -1112,11 +1116,11 @@ function buildViewerHtml(pages){
         // se veio de .a4/.sheet, não vamos criar wrapper extra.
         // vamos adicionar classes direto no elemento raiz da página.
         if(pageHtml && /class=/.test(pageHtml) && /(\ba4\b|\bA4\b|\bsheet\b)/.test(pageHtml)){
-          const cls = `print-page ${scope.substring(1)}`;
+          const cls = `print-page ${scope.substring(1)} docid-${String(p.docId||'doc').replace(/[^A-Za-z0-9_-]/g,'_')}`;
           outPages += addClassesToOuterHtml(pageHtml, cls) + '\n';
         }else{
           // fallback: envolve em uma folha A4 (caso raro)
-          outPages += `<div class="print-page ${scope.substring(1)}">${pageHtml||''}</div>\n`;
+          outPages += `<div class="print-page ${scope.substring(1)} docid-${String(p.docId||'doc').replace(/[^A-Za-z0-9_-]/g,'_')}">${pageHtml||''}</div>\n`;
         }
       });
     });
@@ -1238,20 +1242,192 @@ try{
     return pages;
   }
 
+  async function waitForIframeReady(frame){
+    return new Promise(resolve => {
+      let done = false;
+      function finish(){
+        if(done) return;
+        done = true;
+        resolve();
+      }
+      try{ frame.onload = () => setTimeout(finish, 350); }catch(e){}
+      setTimeout(finish, 1800);
+    });
+  }
+
+  async function waitForImages(doc){
+    try{
+      const imgs = Array.from(doc.querySelectorAll('img'));
+      await Promise.all(imgs.map(img => {
+        if(img.complete) return Promise.resolve();
+        return new Promise(resolve => {
+          img.onload = img.onerror = () => resolve();
+          setTimeout(resolve, 2500);
+        });
+      }));
+    }catch(e){}
+  }
+
+  function sanitizePdfBaseName(value){
+    const name = String(value || '')
+      .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+      .toUpperCase()
+      .replace(/[^A-Z0-9\s_-]+/g,'')
+      .trim()
+      .replace(/\s+/g,'_')
+      .replace(/_+/g,'_')
+      .replace(/^_+|_+$/g,'')
+      .slice(0,90);
+    return name || 'DOCUMENTO_UNIFICADO';
+  }
+
+  function getPdfFileName(){
+    try{
+      // Prioridade: Nome do Titular da PROPOSTA COLETIVO POR ADESÃO.
+      // Exemplo: "JUAN PABLO MOURA" => "JUAN_PABLO_MOURA.pdf".
+      let titular = '';
+      try{
+        const propFrames = (typeof frames !== 'undefined' && frames && frames.proposta) ? frames.proposta : null;
+        if(Array.isArray(propFrames) && propFrames[0]){
+          const frameEl = propFrames[0].tagName === 'IFRAME' ? propFrames[0] : propFrames[0].querySelector('iframe');
+          const doc = frameEl && (frameEl.contentDocument || (frameEl.contentWindow && frameEl.contentWindow.document));
+          const el = doc && doc.getElementById('nome_titular');
+          titular = el && el.value ? el.value : '';
+        }
+      }catch(e){}
+      if(!titular){
+        try{
+          const raw = localStorage.getItem('rprop_state_v4');
+          const oldSt = raw ? JSON.parse(raw) : null;
+          titular = oldSt && oldSt.values && oldSt.values.nome_titular ? oldSt.values.nome_titular : '';
+        }catch(e){}
+      }
+      return sanitizePdfBaseName(titular) + '.pdf';
+    }catch(e){
+      return 'DOCUMENTO_UNIFICADO.pdf';
+    }
+  }
+
+
+  function openPdfBlobNamed(blob, pdfFileName){
+    const url = URL.createObjectURL(blob);
+	console.log('PDF NAME =', pdfFileName);
+    const safeTitle = String(pdfFileName || 'DOCUMENTO_UNIFICADO.pdf')
+      .replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+    const w = window.open('', '_blank');
+    if(w){
+      w.document.open();
+      w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${safeTitle}</title><style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#333}iframe{border:0;width:100%;height:100%}</style></head><body><iframe title="${safeTitle}" src="${url}"></iframe></body></html>`);
+      w.document.close();
+      return {opened:true, url};
+    }
+    return {opened:false, url};
+  }
+
+  async function openPdfFromViewerHtml(html){
+    if(!window.html2canvas || !window.jspdf || !window.jspdf.jsPDF){
+      throw new Error('As bibliotecas de PDF não carregaram. Verifique a internet ou inclua html2canvas/jsPDF localmente.');
+    }
+
+    const holder = document.createElement('div');
+    holder.style.position = 'fixed';
+    holder.style.left = '-10000px';
+    holder.style.top = '0';
+    holder.style.width = '210mm';
+    holder.style.height = '297mm';
+    holder.style.overflow = 'hidden';
+    holder.style.background = '#fff';
+    holder.style.zIndex = '-1';
+
+    const frame = document.createElement('iframe');
+    frame.style.width = '210mm';
+    frame.style.height = '297mm';
+    frame.style.border = '0';
+    frame.style.background = '#fff';
+    holder.appendChild(frame);
+    document.body.appendChild(holder);
+
+    try{
+      frame.srcdoc = html;
+      await waitForIframeReady(frame);
+      const doc = frame.contentDocument || (frame.contentWindow && frame.contentWindow.document);
+      if(!doc) throw new Error('Não foi possível preparar o documento para PDF.');
+      await waitForImages(doc);
+      await sleep(250);
+
+      const pages = Array.from(doc.querySelectorAll('.print-page'));
+      if(!pages.length) throw new Error('Nenhuma página encontrada para gerar PDF.');
+
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4', compress:true });
+
+      for(let i=0; i<pages.length; i++){
+        const page = pages[i];
+        // Remove sombras/folgas visuais da tela antes da captura
+        page.style.margin = '0';
+        page.style.boxShadow = 'none';
+        page.style.width = '210mm';
+        page.style.height = '297mm';
+        page.style.overflow = 'hidden';
+        page.style.background = '#fff';
+
+        const canvas = await window.html2canvas(page, {
+          // Maior escala = PDF mais nítido em todos os documentos
+          scale: 5,
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: '#ffffff',
+          logging: false,
+          windowWidth: page.scrollWidth,
+          windowHeight: page.scrollHeight
+        });
+
+        const img = canvas.toDataURL('image/jpeg', 1.0);
+        if(i > 0) pdf.addPage('a4', 'portrait');
+
+        // A PROPOSTA usa a largura praticamente inteira da folha. Em algumas impressoras,
+        // a área não-imprimível corta a lateral direita. Para ela, aplicamos um encaixe
+        // seguro no PDF final, sem mexer no JSON/posições internas dos campos.
+        const isProposta = page.classList && (page.classList.contains('docid-proposta') || page.classList.contains('doc-0'));
+        if(isProposta){
+          const safeX = 2.5;
+          const safeW = 205.0;
+          const safeH = safeW * 297 / 210;
+          const safeY = (297 - safeH) / 2;
+          pdf.addImage(img, 'JPEG', safeX, safeY, safeW, safeH, undefined, 'SLOW');
+        }else{
+          pdf.addImage(img, 'JPEG', 0, 0, 210, 297, undefined, 'SLOW');
+        }
+      }
+
+      const blob = pdf.output('blob');
+      const pdfFileName = getPdfFileName();
+      const result = openPdfBlobNamed(blob, pdfFileName);
+      if(!result.opened){
+        const a = document.createElement('a');
+        a.href = result.url;
+        a.download = pdfFileName;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      }
+      setTimeout(()=>{ try{ URL.revokeObjectURL(result.url); }catch(e){} }, 120000);
+    }finally{
+      try{ holder.remove(); }catch(e){}
+    }
+  }
+
   let busy = false;
   async function onVisualizarClick(ev){
     if(busy) return;
     busy = true;
 
-    try{
-      ev.preventDefault();
-      ev.stopPropagation();
+    const btn = ev && ev.currentTarget ? ev.currentTarget : document.getElementById('viewUnifiedBtn');
+    const oldTxt = btn ? btn.textContent : '';
 
-      const w = openPreparing();
-      if(!w){
-        alert('Permita pop-ups para visualizar/imprimir.');
-        return;
-      }
+    try{
+      if(ev){ ev.preventDefault(); ev.stopPropagation(); }
+      if(btn){ btn.disabled = true; btn.textContent = 'GERANDO PDF...'; }
 
       const seq = collectWrapsInOrder();
       const pages = await buildPagesFromIframes(seq);
@@ -1263,29 +1439,20 @@ try{
         }
       }catch(e){}
 
+      if(!pages.length){ alert('Nenhum documento carregado para gerar PDF.'); return; }
+
       const html = buildViewerHtml(pages);
-      try{
-        w.document.open();
-        w.document.write(html);
-        w.document.close();
-      }catch(e){
-        try{ w.close(); }catch(_){}
-        const alt = window.open('', '_blank');
-        if(alt){
-          alt.document.open();
-          alt.document.write(html);
-          alt.document.close();
-        }else{
-          alert('Permita pop-ups para visualizar/imprimir.');
-        }
-      }
+      await openPdfFromViewerHtml(html);
     }catch(err){
       try{ console.error(err); }catch(_){}
-      try{ alert('Erro ao visualizar. Abra o console (F12) e envie o print do erro.'); }catch(_){}
+      const msg = (err && err.message) ? err.message : 'Erro ao gerar PDF. Abra o console (F12) e envie o print do erro.';
+      try{ alert(msg); }catch(_){}
     } finally {
+      if(btn){ btn.disabled = false; btn.textContent = oldTxt || 'GERAR PDF'; }
       busy = false;
     }
   }
+
 
 
   function attach(){
@@ -1298,6 +1465,8 @@ try{
     // Substitui o botão por um clone para remover handlers antigos
     const clone = btn.cloneNode(true);
     btn.parentNode.replaceChild(clone, btn);
+    clone.textContent = 'GERAR PDF';
+    clone.title = 'Gerar PDF final e abrir no visualizador do navegador';
     clone.addEventListener('click', onVisualizarClick, {capture:true});
 
     return true;

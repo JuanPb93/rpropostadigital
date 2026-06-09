@@ -13,7 +13,7 @@ body{margin:0;font-family:Arial,sans-serif;background:var(--bg);color:var(--ink)
 h1{margin:0 0 10px;font-size:18px} h2{margin:16px 0 10px;font-size:15px} h3{margin:0 0 12px;font-size:14px}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px} .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
 .fg label{display:block;font-size:12px;color:var(--muted);margin:0 0 6px}
-.label-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 6px}.label-row label{margin:0}.sn-flag{display:inline-flex!important;align-items:center;gap:6px;padding:4px 8px;border:1px solid #d1d5db;border-radius:999px;background:#fff;color:#111827!important;font-size:12px!important;font-weight:700;white-space:nowrap}.sn-flag input{width:auto;height:auto;margin:0}
+.label-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 6px}.label-row label{margin:0}.numero-sn-wrap{display:flex;gap:10px;align-items:center}.numero-sn-wrap #numero{flex:1;min-width:0}.sn-flag{display:inline-flex!important;align-items:center;justify-content:center;gap:6px;height:42px;padding:0 12px;border:1px solid #d1d5db;border-radius:10px;background:#fff;color:#111827!important;font-size:12px!important;font-weight:700;white-space:nowrap;flex:0 0 auto}.sn-flag input{width:auto;height:auto;margin:0}
 input,select{width:100%;height:42px;border:1px solid #d1d5db;border-radius:10px;padding:8px 10px;font-size:14px;outline:none;background:#fff}
 input[readonly]{background:#f3f4f6;user-select:none}
 .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px} button{border:0;border-radius:10px;padding:10px 14px;font-weight:800;cursor:pointer;background:#111827;color:#fff}
@@ -26,6 +26,8 @@ button.secondary{background:#6b7280} button.light{background:#e5e7eb;color:#111}
 .tab-pane{display:none} .tab-pane.active{display:block}
 .inline-calc{display:grid;grid-template-columns:1fr 150px 50px;gap:10px;align-items:end}
 .contrato-wrap,.cityuf{display:flex;gap:10px;align-items:flex-end} .contrato-wrap select,.cityuf input{flex:1} .contrato-wrap input,.cityuf select{flex:0 0 110px}
+.form-section{border:1px solid #e5e7eb;border-radius:14px;padding:14px;margin:12px 0;background:#fafafa}.form-section h3{margin:0 0 12px;font-size:14px;color:#111827}.form-section .grid,.form-section .grid3{margin:0}
+.endereco-grid{display:grid;grid-template-columns:140px minmax(0,1fr) 180px;gap:12px;align-items:end}.endereco-grid .linha2{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,.95fr) 90px;gap:12px;grid-column:1/-1}.endereco-grid .complemento-full{grid-column:1/-1}.endereco-grid #numero{max-width:110px}.endereco-grid .numero-sn-wrap{gap:8px}
 .dep-card{border:1px solid #e5e7eb;border-radius:14px;padding:14px;margin:12px 0;background:#fafafa}
 .psc-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:stretch}
 .psc-card{border:1px solid #e5e7eb;border-radius:14px;padding:14px;background:#fff;box-shadow:none;min-height:134px}
@@ -35,17 +37,17 @@ button.secondary{background:#6b7280} button.light{background:#e5e7eb;color:#111}
 .psc-card .pill{margin:3px 2px;flex:0 0 auto;padding:8px 9px}
 .plan-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;align-items:end}
 @media(max-width:900px){.psc-grid{grid-template-columns:1fr}.plan-grid{grid-template-columns:1fr}}
-#printArea{display:none}.preview-active{display:block!important} .a4{width:min(100%,1240px);aspect-ratio:210/297;height:auto;margin:0 auto;background:#fff;position:relative;overflow:hidden} .tplimg{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;image-rendering:auto} .overlay{position:absolute;inset:0}
+#printArea{display:none}.preview-active{display:block!important} body.previewing #printArea{display:block} body.previewing #fillArea{display:none} .a4{width:210mm;height:297mm;margin:0 auto;background:#fff;position:relative;overflow:hidden} .tplimg{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;image-rendering:auto} .overlay{position:absolute;inset:0}
 .pos{position:absolute;left:calc(var(--x)*1%);bottom:calc(var(--y)*1%);width:calc(var(--w,20)*1%);height:calc(var(--h,1.4)*1%);font-size:calc(var(--fs,9)*1pt)}
-.field{font-weight:700;color:#000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.1} .mark{display:none;font-weight:900;color:#000;line-height:1;width:auto;height:auto;font-size:calc(var(--fs,8)*1pt);transform:translate(-2px,-2px)}
-.preview-footer{width:min(100%,1240px);margin:10px auto 0;display:flex;gap:10px;justify-content:flex-start}
+.field{font-weight:700;color:#000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.1;font-size:calc(var(--fs,9)*1pt - 2px)} .mark{display:none;font-family:Arial,Helvetica,sans-serif;font-weight:900;color:#000;line-height:1;width:auto;height:auto;font-size:calc(var(--fs,8)*1pt);text-align:center;transform:translate(-2px,1px)}
+.preview-footer{width:210mm;margin:10px auto 0;display:none;gap:10px;justify-content:flex-start} body.previewing .preview-footer,.preview-active .preview-footer{display:flex}.preview-footer button{margin:0}.a4,.tplimg{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 .glow-focus{border-color:#2563eb!important;box-shadow:0 0 0 3px rgba(37,99,235,.30),0 0 12px rgba(37,99,235,.55)!important}
 .glow-valid{border-color:#22c55e!important;box-shadow:0 0 0 3px rgba(34,197,94,.25),0 0 12px rgba(34,197,94,.50)!important}
 .glow-error,.invalid-email{border-color:#ef4444!important;box-shadow:0 0 0 3px rgba(239,68,68,.25),0 0 12px rgba(239,68,68,.55)!important}
 .email-suggest{position:fixed;z-index:99999;display:none;background:#fff;border:1px solid #d1d5db;border-radius:12px;box-shadow:0 10px 24px rgba(0,0,0,.14);overflow:hidden;max-height:220px} .email-suggest .item{padding:10px 12px;font-size:14px;cursor:pointer} .email-suggest .item:hover,.email-suggest .item.active{background:#f3f4f6} .email-suggest .hint{padding:8px 12px;font-size:12px;color:#6b7280;border-top:1px solid #e5e7eb;background:#fafafa;margin:0}
-@media(max-width:760px){.grid,.grid3,.inline-calc{grid-template-columns:1fr}.contrato-wrap,.cityuf{display:grid;grid-template-columns:1fr 110px}}
+@media(max-width:760px){.grid,.grid3,.inline-calc,.endereco-grid,.endereco-grid .linha2{grid-template-columns:1fr}.contrato-wrap,.cityuf{display:grid;grid-template-columns:1fr 110px}.endereco-grid #numero{max-width:none}}
 @page{size:A4;margin:0}
-@media print{body{background:#fff}.wrap{max-width:none;margin:0;padding:0}#fillArea{display:none!important}#printArea{display:block!important}button,.preview-footer,.a4{width:210mm!important;height:297mm!important;aspect-ratio:auto!important;margin:0!important}.tplimg{image-rendering:auto}}
+@media print{body{background:#fff}.wrap{max-width:none;margin:0;padding:0}#fillArea,.preview-footer{display:none!important}#printArea{display:block!important}button{display:none!important}.a4{width:210mm!important;height:297mm!important;margin:0!important}.tplimg{image-rendering:auto}}
 </style>
 </head>
 <body>
@@ -71,12 +73,19 @@ button.secondary{background:#6b7280} button.light{background:#e5e7eb;color:#111}
 <div class="tabs"><button type="button" class="tab-btn active" data-tab="titular">Titular</button><button type="button" class="tab-btn" data-tab="dependente">RN / Dependente</button></div>
 <div id="tab_titular" class="tab-pane active">
  <h2>Dados do titular</h2>
- <div class="grid">
+ <section class="form-section titular-comercial">
+  <h3>Dados comerciais / contrato</h3>
+  <div class="grid">
   <div class="fg"><label>Vendedor *</label><select id="vendedor" required><option value="">SELECIONE…</option><option>AGNO NOLETO</option><option>BARBARA SILVA</option><option>ERIKA DE MORAES</option><option>FYLIPE ARAUJO</option><option>LYNDA SILVA</option><option>PAULO VICTOR</option><option>SULLYANA ANDRADE</option></select></div>
   <div class="inline-calc"><div class="fg"><label>Valor do plano (R$) *</label><input id="valor_plano" inputmode="numeric"></div><div class="fg"><label>% da Taxa *</label><input id="pct_taxa" inputmode="numeric"></div><button type="button" id="btn_calc_taxa" class="orange" title="Calcular Taxa">=</button></div>
   <div class="fg"><label>Taxa (R$) *</label><input id="taxa" inputmode="numeric" readonly title="Calculado automaticamente pelo botão ="></div>
   <div class="fg"><label>Contrato *</label><div class="contrato-wrap"><select id="contrato_nome" required><option value="">SELECIONE O CONTRATO</option>
 <option value="1673">ACIP INTERMED</option><option value="1599">ASSIFPI INTERMED</option><option value="1609">SINTUFPI INTERMED</option><option value="590">SISMUJOF</option><option value="5361">ACIP</option><option value="4677">ADCESP</option><option value="4691">ASSIFPI</option><option value="5446">CAU</option><option value="5621">CDL</option><option value="5580">CRECI</option><option value="4709">CRF</option><option value="5562">CRMV</option><option value="4572">FESPPI</option><option value="5392">SENATEPI</option><option value="4599">SINDEPOL</option><option value="5841">SINPRO</option><option value="4903">SINSEP</option><option value="4970">SINTEPI</option><option value="4690">SINTUFPI</option></select><input id="contrato" readonly tabindex="-1"></div></div>
+  </div>
+ </section>
+ <section class="form-section titular-pessoais">
+  <h3>Dados pessoais</h3>
+  <div class="grid">
   <div class="fg"><label>Nome do titular *</label><input id="nome_titular" required autocomplete="off"></div>
   <div class="fg"><label>CPF *</label><input id="cpf_titular" inputmode="numeric" placeholder="000.000.000-00" required></div>
   <div class="fg"><label>Data de nascimento *</label><input id="data_titular" inputmode="numeric" placeholder="DD/MM/AAAA" required></div>
@@ -87,14 +96,23 @@ button.secondary{background:#6b7280} button.light{background:#e5e7eb;color:#111}
   <div class="fg"><label>E-mail *</label><input id="email_titular" type="email" required autocomplete="off"></div>
   <div class="fg"><label>Telefone *</label><input id="fone" inputmode="numeric" placeholder="(00) 00000-0000" required></div>
   <div class="fg"><label>CNS *</label><input id="cns_titular" inputmode="numeric" placeholder="000 0000 0000 0000" required></div>
-  <div class="fg"><label>CEP *</label><input id="cep" inputmode="numeric" placeholder="00000-000" required></div>
-  <div class="fg"><label>Logradouro *</label><input id="logradouro" required autocomplete="off"></div>
-  <div class="fg"><div class="label-row"><label>Número *</label><label class="sn-flag"><input type="checkbox" id="numero_sn"> S/N</label></div><input id="numero" inputmode="numeric" maxlength="5" required></div>
-  <div class="fg"><label>Bairro *</label><input id="bairro" required autocomplete="off"></div>
-  <div class="fg cityuf"><div style="flex:1"><label>Cidade *</label><input id="cidade" required autocomplete="off"></div><div style="flex:0 0 90px"><label>UF *</label><select id="estado" required><option value="">UF</option>
-<option value="AC">AC</option><option value="AL">AL</option><option value="AM">AM</option><option value="AP">AP</option><option value="BA">BA</option><option value="CE">CE</option><option value="DF">DF</option><option value="ES">ES</option><option value="GO">GO</option><option value="MA">MA</option><option value="MG">MG</option><option value="MS">MS</option><option value="MT">MT</option><option value="PA">PA</option><option value="PB">PB</option><option value="PE">PE</option><option value="PI">PI</option><option value="PR">PR</option><option value="RJ">RJ</option><option value="RN">RN</option><option value="RO">RO</option><option value="RR">RR</option><option value="RS">RS</option><option value="SC">SC</option><option value="SE">SE</option><option value="SP">SP</option><option value="TO">TO</option></select></div></div>
-  <div class="fg" style="grid-column:1/-1"><label>Complemento</label><input id="complemento" autocomplete="off"></div>
- </div>
+  </div>
+ </section>
+ <section class="form-section titular-endereco">
+  <h3>Dados do endereço</h3>
+  <div class="endereco-grid">
+    <div class="fg cep-field"><label>CEP *</label><input id="cep" inputmode="numeric" placeholder="00000-000" required></div>
+    <div class="fg logradouro-field"><label>Logradouro *</label><input id="logradouro" required autocomplete="off"></div>
+    <div class="fg numero-field"><label>Número *</label><div class="numero-sn-wrap"><input id="numero" inputmode="numeric" maxlength="7" required><label class="sn-flag"><input type="checkbox" id="numero_sn"> S/N</label></div></div>
+    <div class="linha2">
+      <div class="fg bairro-field"><label>Bairro *</label><input id="bairro" required autocomplete="off"></div>
+      <div class="fg cidade-field"><label>Cidade *</label><input id="cidade" maxlength="30" required autocomplete="off"></div>
+      <div class="fg uf-field"><label>UF *</label><select id="estado" required><option value="">UF</option>
+<option value="AC">AC</option><option value="AL">AL</option><option value="AM">AM</option><option value="AP">AP</option><option value="BA">BA</option><option value="CE">CE</option><option value="DF">DF</option><option value="ES">ES</option><option value="GO">GO</option><option value="MA">MA</option><option value="MG">MG</option><option value="MS">MS</option><option value="MT">MT</option><option value="PA">PA</option><option value="PB">PB</option><option value="PE">PE</option><option value="PI">PI</option><option value="PR">PR</option><option value="RJ">RJ</option><option value="RN">RN</option><option value="RO">RO</option><option value="RR">RR</option><option value="RS">RS</option><option value="SC">SC</option><option value="SE">SE</option><option value="SP">SP</option><option value="TO">TO</option></select></div>
+    </div>
+    <div class="fg complemento-full"><label>Complemento</label><input id="complemento" autocomplete="off"></div>
+  </div>
+ </section>
  <h2>Carência / Portabilidade / Súmula 21</h2>
  <div class="psc-grid">
   <div class="psc-card"><b>Carência</b>
@@ -190,485 +208,485 @@ button.secondary{background:#6b7280} button.light{background:#e5e7eb;color:#111}
 <script>
 const POS = {
   "m_prog_nova": {
-    "x": 3.54,
-    "y": 89.01,
+    "x": 3.52,
+    "y": 89.25,
     "fs": 9
   },
   "m_prog_incl_dep": {
-    "x": 3.54,
-    "y": 87.40,
+    "x": 3.52,
+    "y": 87.65,
     "fs": 9
   },
   "m_prog_migr_int": {
-    "x": 3.54,
-    "y": 85.80,
+    "x": 3.52,
+    "y": 86.05,
     "fs": 9
   },
   "m_prog_mud_mod": {
-    "x": 3.54,
-    "y": 84.19,
+    "x": 3.52,
+    "y": 84.47,
     "fs": 9
   },
   "m_imm_nova": {
-    "x": 71.01,
-    "y": 89,
+    "x": 71.06,
+    "y": 89.25,
     "fs": 9
   },
   "m_imm_rn": {
     "x": 71.01,
-    "y": 87.43,
+    "y": 87.65,
     "fs": 9
   },
   "m_imm_dependente": {
-    "x": 76.47,
-    "y": 87.44,
+    "x": 76.52,
+    "y": 87.65,
     "fs": 9
   },
   "m_imm_mud_tit": {
     "x": 70.98,
-    "y": 85.8,
+    "y": 86.05,
     "fs": 9
   },
   "m_imm_port_esp": {
-    "x": 70.99,
-    "y": 84.21,
+    "x": 71.02,
+    "y": 84.47,
     "fs": 9
   },
   "p_vendedor": {
     "x": 2.8,
-    "y": 79.61,
+    "y": 79.57,
     "w": 24,
-    "fs": 12
+    "fs": 11
   },
   "p_valor_plano": {
     "x": 30.99,
-    "y": 79.61,
+    "y": 79.57,
     "w": 16,
-    "fs": 12
+    "fs": 11
   },
   "p_taxa": {
     "x": 53.56,
-    "y": 79.61,
+    "y": 79.57,
     "w": 12,
-    "fs": 12
+    "fs": 11
   },
   "p_contrato": {
     "x": 76.45,
-    "y": 79.61,
+    "y": 79.57,
     "w": 14,
-    "fs": 12
+    "fs": 11
   },
   "p_nome_titular": {
     "x": 2.81,
-    "y": 76.9,
+    "y": 76.86,
     "w": 65,
-    "fs": 12
+    "fs": 11
   },
   "p_cpf_titular": {
     "x": 72.13,
-    "y": 76.9,
+    "y": 76.86,
     "w": 20,
-    "fs": 12
+    "fs": 11
   },
   "p_data_titular": {
     "x": 2.99,
-    "y": 74.18,
+    "y": 74.10,
     "w": 16,
-    "fs": 12
+    "fs": 11
   },
   "p_local_titular": {
     "x": 30.2,
-    "y": 74.18,
+    "y": 74.10,
     "w": 35,
-    "fs": 12
+    "fs": 11
   },
   "p_sexo_titular": {
     "x": 73.42,
-    "y": 74.18,
+    "y": 74.10,
     "w": 5,
-    "fs": 12
+    "fs": 11
   },
   "p_estado_civil": {
     "x": 81.55,
-    "y": 74.18,
+    "y": 74.10,
     "w": 15,
-    "fs": 12
+    "fs": 11
   },
   "p_email_titular": {
     "x": 3.01,
-    "y": 71.35,
+    "y": 71.40,
     "w": 45,
-    "fs": 12
+    "fs": 11
   },
   "p_fone": {
     "x": 49.9,
-    "y": 71.35,
+    "y": 71.40,
     "w": 18,
-    "fs": 12
+    "fs": 11
   },
   "p_cns_titular": {
     "x": 72.69,
-    "y": 71.35,
+    "y": 71.40,
     "w": 20,
-    "fs": 12
+    "fs": 11
   },
   "p_cep": {
     "x": 3.1,
-    "y": 68.79,
+    "y": 68.80,
     "w": 15,
-    "fs": 12
+    "fs": 11
   },
   "p_logradouro": {
     "x": 23.85,
-    "y": 68.79,
+    "y": 68.80,
     "w": 55,
-    "fs": 12
+    "fs": 11
   },
   "p_numero": {
     "x": 84.49,
-    "y": 68.79,
+    "y": 68.80,
     "w": 12,
-    "fs": 12
+    "fs": 11
   },
   "p_bairro": {
     "x": 3.1,
-    "y": 66.07,
+    "y": 66,
     "w": 45,
-    "fs": 12
+    "fs": 11
   },
   "p_cidade": {
     "x": 49.11,
-    "y": 66.07,
+    "y": 66,
     "w": 32,
-    "fs": 12
+    "fs": 11
   },
   "p_estado": {
     "x": 84.65,
-    "y": 66.07,
+    "y": 66,
     "w": 5,
-    "fs": 12
+    "fs": 11
   },
   "p_complemento": {
     "x": 3.09,
-    "y": 63.3,
+    "y": 63.20,
     "w": 92,
-    "fs": 12
+    "fs": 11
   },
   "p_dep1": {
     "x": 3,
-    "y": 58.47,
+    "y": 58.45,
     "w": 62,
-    "fs": 12
+    "fs": 11
   },
   "p_cpf_d1": {
     "x": 71.88,
-    "y": 58.4,
+    "y": 58.45,
     "w": 22,
-    "fs": 12
+    "fs": 11
   },
   "p_data_d1": {
     "x": 3.2,
-    "y": 55.7,
+    "y": 55.60,
     "w": 16,
-    "fs": 12
+    "fs": 11
   },
   "p_local_d1": {
     "x": 29.09,
-    "y": 55.73,
+    "y": 55.60,
     "w": 35,
-    "fs": 12
+    "fs": 11
   },
   "p_vinculo_d1": {
     "x": 69.27,
-    "y": 55.62,
+    "y": 55.60,
     "w": 11,
-    "fs": 12
+    "fs": 11
   },
   "p_estado_civil_d1": {
     "x": 81.7,
-    "y": 55.67,
+    "y": 55.60,
     "w": 15,
-    "fs": 12
+    "fs": 11
   },
   "p_email_d1": {
     "x": 3.2,
-    "y": 53.01,
+    "y": 53,
     "w": 42,
-    "fs": 12
+    "fs": 11
   },
   "p_telefone_d1": {
     "x": 49.5,
-    "y": 52.95,
+    "y": 53,
     "w": 18,
-    "fs": 12
+    "fs": 11
   },
   "p_cns_d1": {
     "x": 72.17,
-    "y": 52.95,
+    "y": 53,
     "w": 20,
-    "fs": 12
+    "fs": 11
   },
   "p_dep2": {
     "x": 3.2,
-    "y": 49.4,
+    "y": 49.40,
     "w": 62,
-    "fs": 12
+    "fs": 11
   },
   "p_cpf_d2": {
     "x": 71.98,
-    "y": 49.5,
+    "y": 49.40,
     "w": 22,
-    "fs": 12
+    "fs": 11
   },
   "p_data_d2": {
     "x": 3.2,
-    "y": 46.7,
+    "y": 46.60,
     "w": 16,
-    "fs": 12
+    "fs": 11
   },
   "p_local_d2": {
     "x": 29.1,
-    "y": 46.69,
+    "y": 46.60,
     "w": 35,
-    "fs": 12
+    "fs": 11
   },
   "p_vinculo_d2": {
     "x": 69.27,
-    "y": 46.72,
+    "y": 46.60,
     "w": 11,
-    "fs": 12
+    "fs": 11
   },
   "p_estado_civil_d2": {
     "x": 81.61,
-    "y": 46.72,
+    "y": 46.60,
     "w": 15,
-    "fs": 12
+    "fs": 11
   },
   "p_email_d2": {
     "x": 3.1,
     "y": 44,
     "w": 42,
-    "fs": 12
+    "fs": 11
   },
   "p_telefone_d2": {
     "x": 49.5,
     "y": 44,
     "w": 18,
-    "fs": 12
+    "fs": 11
   },
   "p_cns_d2": {
     "x": 72.11,
-    "y": 43.94,
+    "y": 44,
     "w": 20,
-    "fs": 12
+    "fs": 11
   },
   "p_dep3": {
     "x": 3.2,
-    "y": 40.4,
+    "y": 40.40,
     "w": 62,
-    "fs": 12
+    "fs": 11
   },
   "p_cpf_d3": {
     "x": 71.97,
-    "y": 40.37,
+    "y": 40.45,
     "w": 22,
     "fs": 12
   },
   "p_data_d3": {
     "x": 3.2,
-    "y": 37.7,
+    "y": 37.60,
     "w": 16,
-    "fs": 12
+    "fs": 11
   },
   "p_local_d3": {
     "x": 29.21,
-    "y": 37.77,
+    "y": 37.70,
     "w": 35,
     "fs": 12
   },
   "p_vinculo_d3": {
     "x": 69.26,
-    "y": 37.67,
+    "y": 37.70,
     "w": 11,
-    "fs": 12
+    "fs": 11
   },
   "p_estado_civil_d3": {
     "x": 81.71,
-    "y": 37.68,
+    "y": 37.60,
     "w": 15,
-    "fs": 12
+    "fs": 11
   },
   "p_email_d3": {
     "x": 3.1,
-    "y": 34.9,
+    "y": 34.95,
     "w": 42,
-    "fs": 12
+    "fs": 11
   },
   "p_telefone_d3": {
     "x": 49.33,
-    "y": 34.97,
+    "y": 34.95,
     "w": 18,
-    "fs": 12
+    "fs": 11
   },
   "p_cns_d3": {
     "x": 72.27,
-    "y": 34.95,
+    "y": 34.90,
     "w": 20,
-    "fs": 12
+    "fs": 11
   },
   "p_dep4": {
     "x": 3.1,
-    "y": 31.4,
+    "y": 31.35,
     "w": 62,
-    "fs": 12
+    "fs": 11
   },
   "p_cpf_d4": {
     "x": 72.17,
-    "y": 31.43,
+    "y": 31.35,
     "w": 22,
-    "fs": 12
+    "fs": 11
   },
   "p_data_d4": {
     "x": 3.3,
-    "y": 28.62,
+    "y": 28.60,
     "w": 16,
-    "fs": 12
+    "fs": 11
   },
   "p_local_d4": {
     "x": 29.11,
-    "y": 28.69,
+    "y": 28.60,
     "w": 35,
-    "fs": 12
+    "fs": 11
   },
   "p_vinculo_d4": {
     "x": 69.28,
-    "y": 28.68,
+    "y": 28.70,
     "w": 11,
-    "fs": 12
+    "fs": 11
   },
   "p_estado_civil_d4": {
     "x": 81.62,
-    "y": 28.64,
+    "y": 28.60,
     "w": 15,
-    "fs": 12
+    "fs": 11
   },
   "p_email_d4": {
     "x": 3.2,
     "y": 25.95,
     "w": 42,
-    "fs": 12
+    "fs": 11
   },
   "p_telefone_d4": {
     "x": 49.39,
-    "y": 25.9,
+    "y": 26,
     "w": 18,
-    "fs": 12
+    "fs": 11
   },
   "p_cns_d4": {
     "x": 72.39,
-    "y": 25.94,
+    "y": 25.95,
     "w": 20,
-    "fs": 12
+    "fs": 11
   },
   "h_car": {
-    "x": 3.64,
-    "y": 22.68,
+    "x": 3.67,
+    "y": 22.84,
     "fs": 10
   },
   "h_port": {
     "x": 41.78,
-    "y": 22.67,
+    "y": 22.84,
     "fs": 10
   },
   "h_sum": {
     "x": 77.27,
-    "y": 22.62,
+    "y": 22.84,
     "fs": 10
   },
   "car_T": {
     "x": 9.29,
-    "y": 20.85,
+    "y": 20.96,
     "fs": 10
   },
   "car_D1": {
-    "x": 6.22,
-    "y": 19.03,
+    "x": 6.24,
+    "y": 19.20,
     "fs": 10
   },
   "car_D2": {
-    "x": 11.14,
-    "y": 19,
+    "x": 11.19,
+    "y": 19.20,
     "fs": 10
   },
   "car_D3": {
-    "x": 16.19,
-    "y": 18.98,
+    "x": 16.16,
+    "y": 19.20,
     "fs": 10
   },
   "car_D4": {
-    "x": 21.14,
-    "y": 19.01,
+    "x": 21.11,
+    "y": 19.20,
     "fs": 10
   },
   "port_T": {
-    "x": 47.8,
-    "y": 20.76,
+    "x": 47.82,
+    "y": 20.96,
     "fs": 10
   },
   "port_D1": {
     "x": 44.76,
-    "y": 19.03,
+    "y": 19.20,
     "fs": 10
   },
   "port_D2": {
-    "x": 49.7,
-    "y": 19.06,
+    "x": 49.72,
+    "y": 19.20,
     "fs": 10
   },
   "port_D3": {
-    "x": 54.75,
-    "y": 19.03,
+    "x": 54.72,
+    "y": 19.20,
     "fs": 10
   },
   "port_D4": {
-    "x": 59.7,
-    "y": 19,
+    "x": 59.68,
+    "y": 19.20,
     "fs": 10
   },
   "sum_T": {
-    "x": 83.2,
-    "y": 20.70,
+    "x": 83.18,
+    "y": 20.96,
     "fs": 10
   },
   "sum_D1": {
-    "x": 80.06,
-    "y": 18.97,
+    "x": 80.1,
+    "y": 19.20,
     "fs": 10
   },
   "sum_D2": {
     "x": 85.08,
-    "y": 18.99,
+    "y": 19.20,
     "fs": 10
   },
   "sum_D3": {
-    "x": 90.03,
-    "y": 18.99,
+    "x": 90.05,
+    "y": 19.20,
     "fs": 10
   },
   "sum_D4": {
-    "x": 94.93,
-    "y": 18.99,
+    "x": 94.99,
+    "y": 19.20,
     "fs": 10
   },
   "p_nome_plano": {
     "x": 22,
-    "y": 15.28,
+    "y": 15.53,
     "w": 75,
     "fs": 12
   },
   "p_codigo_plano": {
     "x": 23.31,
-    "y": 13.11,
+    "y": 13.36,
     "w": 73.6,
     "fs": 12
   }
@@ -802,14 +820,14 @@ function syncNumeroSN(){
   }else{
     if(num.value==='S/N')num.value='';
     num.readOnly=false;
-    num.maxLength=5;
+    num.maxLength=7;
     num.removeAttribute('data-sn');
   }
   refreshAllGlows();
 }
 function validate(){let m=[];['vendedor','valor_plano','pct_taxa','taxa','contrato_nome','nome_titular','cpf_titular','data_titular','cidade_titular','uf_titular','sexo_titular','estado_civil','email_titular','fone','cns_titular','cep','logradouro','numero','bairro','cidade','estado','nome_plano','codigo_plano'].forEach(id=>{let el=$(id);if(!el)return;let v=(el.value||'').trim(); if((id==='valor_plano'||id==='taxa')&&(parseInt(el.dataset.cents||'0',10)||0)<=0)m.push(id+' obrigatório.'); else if(id==='pct_taxa'&&(parseInt(el.dataset.pcents||'0',10)||0)<=0)m.push('% da Taxa obrigatório.'); else if(!v)m.push(id+' obrigatório.')});if(onlyDigits($('cpf_titular').value).length!==11)m.push('CPF do titular deve ter 11 dígitos.'); if(onlyDigits($('data_titular').value).length!==8)m.push('Data de nascimento do titular deve ter 8 dígitos.'); if(onlyDigits($('cns_titular').value).length!==15)m.push('CNS do titular deve ter 15 dígitos.'); if(onlyDigits($('cep').value).length!==8)m.push('CEP deve ter 8 dígitos.'); if(!isValidEmail($('email_titular').value))m.push('E-mail titular inválido.'); for(let i=1;i<=4;i++){let has=['dep','cpf_d','data_d','cidade_d','uf_d','vinculo_d','estado_civil_d','email_d','telefone_d','cns_d'].some(prefix=>(($(prefix+i)||{value:''}).value||'').trim()); if(has){if(onlyDigits($('cpf_d'+i).value).length!==11)m.push('CPF do Dependente '+i+' deve ter 11 dígitos.'); if(onlyDigits($('data_d'+i).value).length!==8)m.push('Data do Dependente '+i+' deve ter 8 dígitos.'); if(onlyDigits($('cns_d'+i).value).length!==15)m.push('CNS do Dependente '+i+' deve ter 15 dígitos.'); if($('email_d'+i).value&&!isValidEmail($('email_d'+i).value))m.push('E-mail do Dependente '+i+' inválido.')}} showError(m);return m.length===0}
-function gotoPrint(){let f=$('fillArea'),p=$('printArea');if(f)f.style.display='none';if(p){p.classList.add('preview-active');p.style.setProperty('display','block','important')}window.scrollTo(0,0)}
-function voltar(){let f=$('fillArea'),p=$('printArea');if(p){p.classList.remove('preview-active');p.style.display='none'}if(f)f.style.display='block';window.scrollTo(0,0)}
+function gotoPrint(){let f=$('fillArea'),p=$('printArea');document.body.classList.add('previewing');if(f)f.style.display='none';if(p){p.classList.add('preview-active');p.style.setProperty('display','block','important')}window.scrollTo(0,0)}
+function voltar(){let f=$('fillArea'),p=$('printArea');document.body.classList.remove('previewing');if(p){p.classList.remove('preview-active');p.style.display='none'}if(f)f.style.display='block';window.scrollTo(0,0)}
 function preview(){try{fillPrint();applyPosAll();gotoPrint()}catch(e){console.error(e);alert('Erro ao abrir a prévia: '+(e&&e.message?e.message:e))}}
 function gerarImprimir(){if(!validate())return;try{fillPrint();applyPosAll();gotoPrint();setTimeout(()=>window.print(),80)}catch(e){console.error(e);alert('Erro ao gerar impressão: '+(e&&e.message?e.message:e))}}
 function novo(){document.querySelectorAll('#fillArea input,#fillArea select').forEach(el=>{if(el.type==='radio'||el.type==='checkbox')el.checked=false;else el.value=''; if(el.dataset){el.dataset.cents='0';el.dataset.pcents='0'}});$('valor_plano').value='0,00';$('taxa').value='0,00';$('pct_taxa').value='0,00';$$('.psel').forEach(cb=>cb.disabled=false);showError([]);refreshAllGlows()}
@@ -844,7 +862,7 @@ function bindGlowInputs(){document.querySelectorAll('#fillArea input,#fillArea s
   el.addEventListener('change',()=>updateGlow(el));
   updateGlow(el);
 })}
-document.addEventListener('DOMContentLoaded',()=>{applyPosAll();attachMoneyMask($('valor_plano'));attachMoneyMask($('taxa'));attachPercentMask($('pct_taxa'));$('btn_calc_taxa').addEventListener('click',()=>{recomputeTaxaFromPct();refreshAllGlows()});$('contrato_nome').addEventListener('change',()=>{$('contrato').value=$('contrato_nome').value;refreshAllGlows()});$('nome_plano').addEventListener('change',()=>{let o=$('nome_plano').selectedOptions[0];$('codigo_plano').value=o?(o.dataset.codigo?o.dataset.codigo+' - '+o.value:''):'';refreshAllGlows()});attachMask('cpf_titular',formatCpf);attachMask('data_titular',formatDate);attachMask('cns_titular',formatCns);attachMask('cep',formatCep);attachMask('fone',formatPhone);attachMask('numero',v=>onlyDigitsMax(v,5));$('numero_sn').addEventListener('change',syncNumeroSN);syncNumeroSN();['nome_titular'].forEach(id=>attachText(id,allowedName));['cidade_titular','logradouro','bairro','cidade'].forEach(id=>attachText(id,allowedAddress));attachText('complemento',allowedComplement);bindCidadeUF('local_titular','cidade_titular','uf_titular');for(let i=1;i<=4;i++){attachText('dep'+i,allowedName);attachMask('cpf_d'+i,formatCpf);attachMask('data_d'+i,formatDate);attachMask('telefone_d'+i,formatPhone);attachMask('cns_d'+i,formatCns);attachText('cidade_d'+i,allowedAddress);bindCidadeUF('local_d'+i,'cidade_d'+i,'uf_d'+i);bindEmail('email_d'+i,false)}bindEmail('email_titular',true);$$('.psel').forEach(cb=>cb.addEventListener('change',e=>syncPSC(e.target)));$$('.tab-btn').forEach(b=>b.addEventListener('click',()=>{$$('.tab-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');$$('.tab-pane').forEach(p=>p.classList.remove('active'));$('tab_'+b.dataset.tab).classList.add('active')}));bindGlowInputs();refreshAllGlows();})
+document.addEventListener('DOMContentLoaded',()=>{applyPosAll();attachMoneyMask($('valor_plano'));attachMoneyMask($('taxa'));attachPercentMask($('pct_taxa'));$('btn_calc_taxa').addEventListener('click',()=>{recomputeTaxaFromPct();refreshAllGlows()});$('contrato_nome').addEventListener('change',()=>{$('contrato').value=$('contrato_nome').value;refreshAllGlows()});$('nome_plano').addEventListener('change',()=>{let o=$('nome_plano').selectedOptions[0];$('codigo_plano').value=o?(o.dataset.codigo?o.dataset.codigo+' - '+o.value:''):'';refreshAllGlows()});attachMask('cpf_titular',formatCpf);attachMask('data_titular',formatDate);attachMask('cns_titular',formatCns);attachMask('cep',formatCep);attachMask('fone',formatPhone);attachMask('numero',v=>onlyDigitsMax(v,7));$('numero_sn').addEventListener('change',syncNumeroSN);syncNumeroSN();['nome_titular'].forEach(id=>attachText(id,allowedName));['cidade_titular','logradouro','bairro','cidade'].forEach(id=>attachText(id,allowedAddress));attachText('complemento',allowedComplement);bindCidadeUF('local_titular','cidade_titular','uf_titular');for(let i=1;i<=4;i++){attachText('dep'+i,allowedName);attachMask('cpf_d'+i,formatCpf);attachMask('data_d'+i,formatDate);attachMask('telefone_d'+i,formatPhone);attachMask('cns_d'+i,formatCns);attachText('cidade_d'+i,allowedAddress);bindCidadeUF('local_d'+i,'cidade_d'+i,'uf_d'+i);bindEmail('email_d'+i,false)}bindEmail('email_titular',true);$$('.psel').forEach(cb=>cb.addEventListener('change',e=>syncPSC(e.target)));$$('.tab-btn').forEach(b=>b.addEventListener('click',()=>{$$('.tab-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');$$('.tab-pane').forEach(p=>p.classList.remove('active'));$('tab_'+b.dataset.tab).classList.add('active')}));bindGlowInputs();refreshAllGlows();})
 </script>
 <script id="UNIFIED_SYSTEM_HIDE_PRINTBTN_ONLY">(function(){function hide(){try{Array.from(document.querySelectorAll('button,input[type="button"],input[type="submit"]')).forEach(el=>{const t=(el.textContent||el.value||'').toUpperCase();if(t.includes('GERAR PDF'))el.style.display='none'})}catch(e){}}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',hide);else hide();})();</script>
 <script id="UNIFIED_SYSTEM_BRIDGE_V2">(function(){if(window.__unifiedBridgeV2)return;window.__unifiedBridgeV2=true;function findButtonByText(substr){substr=(substr||'').toUpperCase();return Array.from(document.querySelectorAll('button,input[type="button"],input[type="submit"]')).find(b=>((b.textContent||b.value||'')+'').toUpperCase().includes(substr))}function respond(ev,data){try{ev.source.postMessage(Object.assign({__unified:true,rid:ev.data&&ev.data.rid},data),'*')}catch(e){}}window.addEventListener('message',(ev)=>{const msg=ev.data;if(!msg||typeof msg!=='object'||msg.__unified!==true)return;if(msg.type==='PING'){respond(ev,{type:'PONG'});return}if(msg.type==='VALIDATE'){respond(ev,{type:'VALIDATE_RESULT',ok:true,errors:[]});return}if(msg.type==='PREPARE_PRINT'){const prev=findButtonByText('VER PRÉVIA');if(prev)try{prev.click()}catch(e){}setTimeout(()=>respond(ev,{type:'PREPARE_PRINT_OK',ok:true}),160);return}if(msg.type==='EXPORT_HTML'){
