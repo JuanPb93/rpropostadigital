@@ -1693,8 +1693,11 @@ if(msg.type === 'EXPORT_HTML'){
     add(items, has('nome_benef'), 'Nome do beneficiário.');
     add(items, has('prestadora'), 'Prestadora.');
     add(items, has('plano_contrato'), 'Plano contrato.');
-    add(items, !!document.querySelector('input[name="ativ_tipo"]:checked'), 'Ativação prevista: marque Programada ou Imediata.');
-    add(items, dateOk(val('ativ_data')), 'Data de ativação válida.');
+    const ativTipoEl = document.querySelector('input[name="ativ_tipo"]:checked');
+    add(items, !!ativTipoEl, 'Ativação prevista: marque Programada ou Imediata.');
+    if(ativTipoEl && ativTipoEl.value === 'PROGRAMADA'){
+      add(items, dateOk(val('ativ_data')), 'Data de ativação válida.');
+    }
     add(items, moneyOk('valor_mensal'), 'Valor mensal do plano.');
     add(items, has('contrato'), 'Contrato.');
     add(items, has('venc_dia'), 'Vencimento (dia).');
