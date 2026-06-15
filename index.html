@@ -778,7 +778,7 @@ renderAttachList();
 /* Patch V3: GERAR PDF unificado (abre PDF final no visualizador nativo do navegador)
    - Não altera o restante do sistema
    - Remove listeners antigos do botão VISUALIZAR substituindo o elemento
-   - Não bloqueia por validação
+   - Bloqueia por validação obrigatória antes de gerar
    - Evita travar o botão em caso de erro (busy sempre resetado)
    - Usa html2canvas + jsPDF para baixar/abrir PDF real em vez de depender do Ctrl+P
 */
@@ -1417,6 +1417,259 @@ try{
     }
   }
 
+
+  // =========================
+  // VALIDAÇÃO OBRIGATÓRIA V19
+  // Bloqueia o GERAR PDF e mostra o documento/instância com pendências.
+  // =========================
+  const DOC_TITLES_V19 = {
+    proposta: 'PROPOSTA COLETIVO POR ADESÃO',
+    carencia: 'TERMO DE CARÊNCIA',
+    carta: 'CARTA ANS',
+    consent: 'TERMO DE CONSENTIMENTO',
+    comprov: 'COMPROVANTE DE ADESÃO'
+  };
+
+  function escapeHtmlV19(txt){
+    return String(txt || '')
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;')
+      .replace(/'/g,'&#39;');
+  }
+
+  function showValidationProblemsV19(groups){
+    const overlay = document.getElementById('modalOverlay');
+    const list = document.getElementById('modalList');
+    const close = document.getElementById('modalCloseBtn');
+    if(!overlay || !list){
+      const flat = [];
+      (groups || []).forEach(g => {
+        flat.push((g && g.title ? g.title : 'Documento') + ':');
+        (g.items || []).forEach(i => flat.push('• ' + i));
+      });
+      alert('Faltam campos obrigatórios:\n\n' + flat.join('\n'));
+      return;
+    }
+
+    list.innerHTML = '';
+    (groups || []).forEach(g => {
+      if(!g || !g.items || !g.items.length) return;
+      const box = document.createElement('div');
+      box.className = 'grp';
+      const title = document.createElement('div');
+      title.className = 't';
+      title.textContent = g.title || 'Documento';
+      const ul = document.createElement('ul');
+      g.items.forEach(item => {
+        const li = document.createElement('li');
+        li.textContent = item;
+        ul.appendChild(li);
+      });
+      box.appendChild(title);
+      box.appendChild(ul);
+      list.appendChild(box);
+    });
+
+    overlay.style.display = 'flex';
+    if(close){
+      close.onclick = () => { overlay.style.display = 'none'; };
+    }
+    overlay.onclick = (ev) => {
+      if(ev && ev.target === overlay) overlay.style.display = 'none';
+    };
+  }
+
+  function getIframeDocV19(iframe){
+    try{ return iframe && (iframe.contentDocument || (iframe.contentWindow && iframe.contentWindow.document)); }
+    catch(e){ return null; }
+  }
+
+  function valV19(doc, id){
+    const el = doc && doc.getElementById(id);
+    if(!el) return '';
+    if(el.type === 'checkbox') return el.checked ? '1' : '';
+    if(el.type === 'radio') return el.checked ? (el.value || '1') : '';
+    return String(el.value || '').trim();
+  }
+
+  function digitsV19(v){ return String(v || '').replace(/\D+/g,''); }
+
+  function hasV19(doc, id){ return !!valV19(doc, id); }
+
+  function moneyOkV19(doc, id){
+    const el = doc && doc.getElementById(id);
+    if(!el) return false;
+    const raw = String(el.value || '').trim();
+    if(!raw) return false;
+    const cents = parseInt(el.dataset && el.dataset.cents ? el.dataset.cents : '0', 10) || 0;
+    if(cents > 0) return true;
+    const nums = digitsV19(raw);
+    if(!nums) return false;
+    return parseInt(nums, 10) > 0;
+  }
+
+  function percentOkV19(doc, id){
+    const el = doc && doc.getElementById(id);
+    if(!el) return false;
+    const raw = String(el.value || '').trim();
+    if(!raw) return false;
+    const pcents = parseInt(el.dataset && el.dataset.pcents ? el.dataset.pcents : '0', 10) || 0;
+    if(pcents > 0) return true;
+    const nums = digitsV19(raw);
+    if(!nums) return false;
+    return parseInt(nums, 10) > 0;
+  }
+
+  function emailOkV19(v){
+    const s = String(v || '').trim();
+    return !!s && /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i.test(s);
+  }
+
+  function dateOkV19(v){
+    const s = String(v || '').trim();
+    if(!/^\d{2}\/\d{2}\/\d{4}$/.test(s)) return false;
+    const [dd,mm,yyyy] = s.split('/').map(x => parseInt(x,10));
+    if(!(yyyy >= 1900 && yyyy <= 2100)) return false;
+    if(!(mm >= 1 && mm <= 12)) return false;
+    if(!(dd >= 1 && dd <= 31)) return false;
+    return true;
+  }
+
+  function addMissingV19(items, ok, label){
+    if(!ok) items.push(label);
+  }
+
+  function validatePropostaV19(doc){
+    const items = [];
+
+    addMissingV19(items, !!doc.querySelector('input[name="mov"]:checked'), 'Movimentação: marque uma opção programada ou imediata.');
+
+    addMissingV19(items, hasV19(doc,'vendedor'), 'Dados comerciais: Vendedor.');
+    addMissingV19(items, moneyOkV19(doc,'valor_plano'), 'Dados comerciais: Valor do plano.');
+    addMissingV19(items, percentOkV19(doc,'pct_taxa'), 'Dados comerciais: % da taxa.');
+    addMissingV19(items, moneyOkV19(doc,'taxa'), 'Dados comerciais: Taxa.');
+    addMissingV19(items, !!(valV19(doc,'contrato_nome') || valV19(doc,'contrato')), 'Dados comerciais: Contrato.');
+
+    addMissingV19(items, hasV19(doc,'nome_titular'), 'Titular: Nome do titular.');
+    addMissingV19(items, digitsV19(valV19(doc,'cpf_titular')).length === 11, 'Titular: CPF com 11 dígitos.');
+    addMissingV19(items, dateOkV19(valV19(doc,'data_titular')), 'Titular: Data de nascimento válida.');
+    addMissingV19(items, hasV19(doc,'cidade_titular'), 'Titular: Cidade de nascimento.');
+    addMissingV19(items, hasV19(doc,'uf_titular'), 'Titular: UF de nascimento.');
+    addMissingV19(items, hasV19(doc,'sexo_titular'), 'Titular: Sexo.');
+    addMissingV19(items, hasV19(doc,'estado_civil'), 'Titular: Estado civil.');
+    addMissingV19(items, emailOkV19(valV19(doc,'email_titular')), 'Titular: E-mail válido.');
+    addMissingV19(items, digitsV19(valV19(doc,'fone')).length >= 10, 'Titular: Telefone.');
+    addMissingV19(items, digitsV19(valV19(doc,'cns_titular')).length === 15, 'Titular: CNS com 15 dígitos.');
+
+    addMissingV19(items, digitsV19(valV19(doc,'cep')).length === 8, 'Endereço: CEP com 8 dígitos.');
+    addMissingV19(items, hasV19(doc,'logradouro'), 'Endereço: Logradouro.');
+    const numeroOk = hasV19(doc,'numero') || !!(doc.getElementById('numero_sn') && doc.getElementById('numero_sn').checked);
+    addMissingV19(items, numeroOk, 'Endereço: Número ou marcar S/N.');
+    addMissingV19(items, hasV19(doc,'bairro'), 'Endereço: Bairro.');
+    addMissingV19(items, hasV19(doc,'cidade'), 'Endereço: Cidade.');
+    addMissingV19(items, hasV19(doc,'estado'), 'Endereço: UF.');
+
+    addMissingV19(items, !!doc.querySelector('.psel:checked'), 'Carência / Portabilidade / Súmula 21: marque pelo menos uma opção.');
+    addMissingV19(items, hasV19(doc,'nome_plano'), 'Plano: selecione um plano.');
+    addMissingV19(items, hasV19(doc,'codigo_plano'), 'Plano: código do plano.');
+
+    return items;
+  }
+
+  function validateCarenciaV19(doc){
+    const items = [];
+    const fields = [
+      ['nome_benef', 'Nome do beneficiário'],
+      ['car_urgencia', 'Atendimento de urgência/emergência'],
+      ['car_consultas', 'Consultas eletivas'],
+      ['car_ex_basicos', 'Exames complementares básicos'],
+      ['car_ex_especiais', 'Exames especiais / alta complexidade'],
+      ['car_internacoes', 'Internações'],
+      ['car_cirurgias', 'Cirurgias'],
+      ['car_parto', 'Parto a termo'],
+      ['car_dlp', 'Doenças/lesões preexistentes - DLP']
+    ];
+    fields.forEach(([id,label]) => addMissingV19(items, hasV19(doc,id), label + '.'));
+    return items;
+  }
+
+  function validateCartaV19(doc){
+    const items = [];
+    addMissingV19(items, hasV19(doc,'nome_benef'), 'Nome do beneficiário.');
+    return items;
+  }
+
+  function validateConsentimentoV19(doc){
+    const items = [];
+    addMissingV19(items, emailOkV19(valV19(doc,'email')), 'E-mail válido.');
+    addMissingV19(items, digitsV19(valV19(doc,'ddd')).length === 2, 'DDD com 2 dígitos.');
+    addMissingV19(items, digitsV19(valV19(doc,'telefone')).length === 9, 'Fone com 9 dígitos.');
+    return items;
+  }
+
+  function validateComprovanteV19(doc){
+    const items = [];
+    const ativTipo = !!doc.querySelector('input[name="ativ_tipo"]:checked');
+    addMissingV19(items, hasV19(doc,'nome_benef'), 'Nome do beneficiário.');
+    addMissingV19(items, hasV19(doc,'prestadora'), 'Prestadora.');
+    addMissingV19(items, hasV19(doc,'plano_contrato'), 'Plano contrato.');
+    addMissingV19(items, ativTipo, 'Ativação prevista: marque Programada ou Imediata.');
+    addMissingV19(items, dateOkV19(valV19(doc,'ativ_data')), 'Data de ativação válida.');
+    addMissingV19(items, moneyOkV19(doc,'valor_mensal'), 'Valor mensal do plano.');
+    addMissingV19(items, hasV19(doc,'contrato'), 'Contrato.');
+    addMissingV19(items, hasV19(doc,'venc_dia'), 'Vencimento (dia).');
+    addMissingV19(items, hasV19(doc,'reaj_mes'), 'Período de reajuste anual (mês).');
+    addMissingV19(items, hasV19(doc,'resp_resolve'), 'Responsável Resolve.');
+    // DESISTÊNCIA DA ADESÃO e DATA PORTABILIDADE são opcionais por regra.
+    return items;
+  }
+
+  async function validateRequiredBeforePdfV19(seq){
+    const groups = [];
+    for(const it of (seq || [])){
+      if(!it || !it.iframe) continue;
+
+      const baseTitle = DOC_TITLES_V19[it.docId] || String(it.docId || 'Documento').toUpperCase();
+      const title = (it.docId === 'carencia' || it.docId === 'carta')
+        ? `${baseTitle} — Instância ${it.inst || '1'}`
+        : baseTitle;
+
+      let items = [];
+      try{
+        // V19.1: validação feita DENTRO de cada iframe via postMessage.
+        // Isso evita falha em file:// / Chrome quando o index não consegue ler contentDocument diretamente.
+        const resp = await postToIframe(it.iframe, {
+          type:'VALIDATE_REQUIRED_V191',
+          docId: it.docId,
+          inst: it.inst || '1'
+        }, 2600);
+
+        if(resp && resp.type === 'VALIDATE_REQUIRED_V191_RESULT'){
+          items = Array.isArray(resp.errors) ? resp.errors.filter(Boolean) : [];
+        }else{
+          items = ['Não foi possível validar este documento. Recarregue a página e tente novamente.'];
+        }
+      }catch(e){
+        // Fallback: tenta a validação antiga do bridge, caso algum documento não tenha recebido o patch V19.1.
+        try{
+          const oldResp = await postToIframe(it.iframe, {type:'VALIDATE'}, 1600);
+          if(oldResp && oldResp.type === 'VALIDATE_RESULT'){
+            items = Array.isArray(oldResp.errors) ? oldResp.errors.filter(Boolean) : [];
+          }else{
+            items = ['Não foi possível validar este documento. Recarregue a página e tente novamente.'];
+          }
+        }catch(e2){
+          items = ['Não foi possível validar este documento. Recarregue a página e tente novamente.'];
+        }
+      }
+
+      if(items && items.length) groups.push({title, items});
+    }
+    return groups;
+  }
+
   let busy = false;
   async function onVisualizarClick(ev){
     if(busy) return;
@@ -1430,6 +1683,12 @@ try{
       if(btn){ btn.disabled = true; btn.textContent = 'GERANDO PDF...'; }
 
       const seq = collectWrapsInOrder();
+      const validationProblems = await validateRequiredBeforePdfV19(seq);
+      if(validationProblems && validationProblems.length){
+        showValidationProblemsV19(validationProblems);
+        return;
+      }
+
       const pages = await buildPagesFromIframes(seq);
 
       try{
