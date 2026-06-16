@@ -119,6 +119,9 @@
   mix-blend-mode:multiply;
 }
 
+
+.calib-label::before{ content: attr(data-calib-label); }
+
 .calib-on .calib-handle,
 .calib-on .calib-resize,
 .calib-on .calib-label{ display:block; }
@@ -400,6 +403,7 @@
 /* === v59: esconder botão MODO CALIBRAÇÃO (CSS) === */
 button[onclick*="toggleCalib"]{ display:none !important; }
 </style>
+<!-- V2.5: labels de calibração foram movidos para data-calib-label; valores ficam separados em data-field/id. -->
 </head>
 <body>
 <div class="wrap">
@@ -609,90 +613,90 @@ button[onclick*="toggleCalib"]{ display:none !important; }
         <!-- 1 -->
         <div class="pos" data-key="out_nome1" style="--x:11.605; --y:81.657;">
           <div class="calib-handle"></div>
-          <div class="calib-label">out_nome1</div>
-          <div class="field" style="--w:49.808;" id="out_nome1"><div class="calib-resize" title="Arraste para ajustar largura"></div></div>
+          <div class="calib-label" data-calib-label="out_nome1"></div>
+          <div class="field" style="--w:49.808;" id="out_nome1" data-field="out_nome1"><div class="calib-resize" title="Arraste para ajustar largura"></div></div>
         </div>
 
         <!-- 2 (plano no texto: 'adesão ao plano ____') -->
 <!-- 2b (PRESTADORA: UNIMED/INTERMED) -->
         <div class="pos" data-key="out_prestadora" style="--x:42.886; --y:79.726;">
           <div class="calib-handle"></div>
-          <div class="calib-label">out_prestadora</div>
-          <div class="field" style="--w:14.000;" id="out_prestadora"><div class="calib-resize" title="Arraste para ajustar largura"></div></div>
+          <div class="calib-label" data-calib-label="out_prestadora"></div>
+          <div class="field" style="--w:14.000;" id="out_prestadora" data-field="out_prestadora"><div class="calib-resize" title="Arraste para ajustar largura"></div></div>
         </div>
 
         <!-- 3 plano contratado -->
         <div class="pos" data-key="out_plano_contrat" style="--x:24.948; --y:67.154;">
           <div class="calib-handle"></div>
-          <div class="calib-label">out_plano_contrat</div>
-          <div class="field" style="--w:51.731;" id="out_plano_contrat"><div class="calib-resize" title="Arraste para ajustar largura"></div></div>
+          <div class="calib-label" data-calib-label="out_plano_contrat"></div>
+          <div class="field" style="--w:51.731;" id="out_plano_contrat" data-field="out_plano_contrat"><div class="calib-resize" title="Arraste para ajustar largura"></div></div>
         </div>
 
         <!-- 4 ativação prevista -->
         <div class="pos" data-key="out_ativacao" style="--x:24.185; --y:64.418;">
           <div class="calib-handle"></div>
-          <div class="calib-label">out_ativacao</div>
-          <div class="field" style="--w:48.365;" id="out_ativacao"><div class="calib-resize" title="Arraste para ajustar largura"></div></div>
+          <div class="calib-label" data-calib-label="out_ativacao"></div>
+          <div class="field" style="--w:48.365;" id="out_ativacao" data-field="out_ativacao"><div class="calib-resize" title="Arraste para ajustar largura"></div></div>
         </div>
 
         <!-- 5 valor mensal -->
         <div class="pos" data-key="out_valor" style="--x:29.575; --y:61.672;">
           <div class="calib-handle"></div>
-          <div class="calib-label">out_valor</div>
-          <div class="field mono" style="--w:45.865;" id="out_valor"><div class="calib-resize" title="Arraste para ajustar largura"></div></div>
+          <div class="calib-label" data-calib-label="out_valor"></div>
+          <div class="field mono" style="--w:45.865;" id="out_valor" data-field="out_valor"><div class="calib-resize" title="Arraste para ajustar largura"></div></div>
         </div>
 
         <!-- 6 vencimento (DIA X) -->
         <div class="pos" data-key="out_venc" style="--x:49.158; --y:59.176;">
           <div class="calib-handle"></div>
-          <div class="calib-label">out_venc</div>
-          <div class="field mono" style="--w:35.673;" id="out_venc"><div class="calib-resize" title="Arraste para ajustar largura"></div></div>
+          <div class="calib-label" data-calib-label="out_venc"></div>
+          <div class="field mono" style="--w:35.673;" id="out_venc" data-field="out_venc"><div class="calib-resize" title="Arraste para ajustar largura"></div></div>
         </div>
 
         <!-- 7 reajuste anual (mês) -->
         <div class="pos" data-key="out_reaj" style="--x:32.787; --y:56.452;">
           <div class="calib-handle"></div>
-          <div class="calib-label">out_reaj</div>
-          <div class="field" style="--w:40.000;" id="out_reaj"><div class="calib-resize" title="Arraste para ajustar largura"></div></div>
+          <div class="calib-label" data-calib-label="out_reaj"></div>
+          <div class="field" style="--w:40.000;" id="out_reaj" data-field="out_reaj"><div class="calib-resize" title="Arraste para ajustar largura"></div></div>
         </div>
 
         <!-- 8 desistência mês -->
         <div class="pos" data-key="out_desist" style="--x:43.786; --y:43.286;">
           <div class="calib-handle"></div>
-          <div class="calib-label">out_desist</div>
-          <div class="field" style="--w:37.981;" id="out_desist"><div class="calib-resize" title="Arraste para ajustar largura"></div></div>
+          <div class="calib-label" data-calib-label="out_desist"></div>
+          <div class="field" style="--w:37.981;" id="out_desist" data-field="out_desist"><div class="calib-resize" title="Arraste para ajustar largura"></div></div>
         </div>
 
         <!-- 9 portabilidade data (DD / MM / AAAA) -->
         <div class="pos" data-key="out_port_dd" style="--x:35.239; --y:38.926;">
           <div class="calib-handle"></div>
-          <div class="calib-label">out_port_dd</div>
-          <div class="field mono" style="--w:5.500;" id="out_port_dd"><div class="calib-resize" title="Arraste para ajustar largura"></div></div>
+          <div class="calib-label" data-calib-label="out_port_dd"></div>
+          <div class="field mono" style="--w:5.500;" id="out_port_dd" data-field="out_port_dd"><div class="calib-resize" title="Arraste para ajustar largura"></div></div>
         </div>
 
         <div class="pos" data-key="out_port_mm" style="--x:38.971; --y:38.926;">
           <div class="calib-handle"></div>
-          <div class="calib-label">out_port_mm</div>
-          <div class="field mono" style="--w:5.500;" id="out_port_mm"><div class="calib-resize" title="Arraste para ajustar largura"></div></div>
+          <div class="calib-label" data-calib-label="out_port_mm"></div>
+          <div class="field mono" style="--w:5.500;" id="out_port_mm" data-field="out_port_mm"><div class="calib-resize" title="Arraste para ajustar largura"></div></div>
         </div>
 
         <div class="pos" data-key="out_port_aaaa" style="--x:42.577; --y:38.926;">
           <div class="calib-handle"></div>
-          <div class="calib-label">out_port_aaaa</div>
-          <div class="field mono" style="--w:9.000;" id="out_port_aaaa"><div class="calib-resize" title="Arraste para ajustar largura"></div></div>
+          <div class="calib-label" data-calib-label="out_port_aaaa"></div>
+          <div class="field mono" style="--w:9.000;" id="out_port_aaaa" data-field="out_port_aaaa"><div class="calib-resize" title="Arraste para ajustar largura"></div></div>
         </div>
 
         <!-- 10 nome repetido (Eu, ____) -->
         <div class="pos" data-key="out_nome2" style="--x:8.945; --y:29.215;">
           <div class="calib-handle"></div>
-          <div class="calib-label">out_nome2</div>
-          <div class="field" style="--w:41.058;" id="out_nome2"><div class="calib-resize" title="Arraste para ajustar largura"></div></div>
+          <div class="calib-label" data-calib-label="out_nome2"></div>
+          <div class="field" style="--w:41.058;" id="out_nome2" data-field="out_nome2"><div class="calib-resize" title="Arraste para ajustar largura"></div></div>
 
         </div>
 
         <div class="pos" data-key="out_resp_resolve" style="--x:10.118; --y:23.282;">
-          <div class="calib-label">out_resp_resolve</div>
-          <div class="field" style="--w:28.000;" id="out_resp_resolve"><div class="calib-resize" title="Arraste para ajustar largura"></div></div>
+          <div class="calib-label" data-calib-label="out_resp_resolve"></div>
+          <div class="field" style="--w:28.000;" id="out_resp_resolve" data-field="out_resp_resolve"><div class="calib-resize" title="Arraste para ajustar largura"></div></div>
         </div>
 
       </div>
@@ -1727,6 +1731,174 @@ if(msg.type === 'EXPORT_HTML'){
     let errors = [];
     try{ errors = validateRequired(); }catch(e){ errors = ['Erro interno ao validar este documento.']; }
     respond(ev, {type:'VALIDATE_REQUIRED_V191_RESULT', ok: errors.length === 0, errors: errors});
+  }, false);
+})();
+</script>
+
+
+
+<script id="PDF_ORIGINAL_OVERLAY_BRIDGE_V26">
+/* V2.6 - Bridge de extração para PDF original.
+   O index.html não acessa mais document/contentDocument do iframe.
+   Cada documento mede suas próprias posições e devolve somente dados simples via postMessage. */
+(function(){
+  if(window.__pdfOriginalOverlayBridgeV26) return;
+  window.__pdfOriginalOverlayBridgeV26 = true;
+
+  function normalizeOverlayText(text){
+    return String(text || '')
+      .replace(/\u00a0/g, ' ')
+      .replace(/[\u200B-\u200D\uFEFF]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  function isVisible(el){
+    if(!el) return false;
+    const cs = window.getComputedStyle(el);
+    if(!cs || cs.display === 'none' || cs.visibility === 'hidden' || parseFloat(cs.opacity || '1') === 0) return false;
+    let cur = el.parentElement;
+    while(cur){
+      const ccs = window.getComputedStyle(cur);
+      if(ccs && (ccs.display === 'none' || ccs.visibility === 'hidden')) return false;
+      cur = cur.parentElement;
+    }
+    return true;
+  }
+
+  function readCleanNodeText(node){
+    if(!node) return '';
+    const clone = node.cloneNode(true);
+    try{
+      clone.querySelectorAll('.calib-label, .calib-handle, .calib-resize, .gridlines, script, style').forEach(n => n.remove());
+    }catch(e){}
+    return normalizeOverlayText(clone.textContent || '');
+  }
+
+  function stripInternalKeyPrefix(text, el){
+    text = normalizeOverlayText(text);
+    if(!text || !el) return text;
+    const keys = [];
+    try{ if(el.id) keys.push(el.id); }catch(e){}
+    try{ if(el.getAttribute('data-key')) keys.push(el.getAttribute('data-key')); }catch(e){}
+    try{ if(el.getAttribute('data-calib')) keys.push(el.getAttribute('data-calib')); }catch(e){}
+    try{ if(el.getAttribute('data-calib-label')) keys.push(el.getAttribute('data-calib-label')); }catch(e){}
+    try{ if(el.getAttribute('data-field')) keys.push(el.getAttribute('data-field')); }catch(e){}
+    for(const k of keys){
+      const key = normalizeOverlayText(k);
+      if(!key) continue;
+      if(text === key) return '';
+      if(text.startsWith(key + ' ')) return normalizeOverlayText(text.slice(key.length));
+      if(text.startsWith(key + ':')) return normalizeOverlayText(text.slice(key.length + 1));
+      if(text.startsWith(key + ' - ')) return normalizeOverlayText(text.slice(key.length + 3));
+    }
+    return normalizeOverlayText(text.replace(/^(out_[A-Za-z0-9_\-]+)\s*/,'').replace(/^(p_[A-Za-z0-9_\-]+)\s*/,''));
+  }
+
+  function textFromPos(el){
+    if(!el) return '';
+    if(el.classList && el.classList.contains('mark')){
+      const markText = normalizeOverlayText(el.textContent || '');
+      return markText ? 'X' : '';
+    }
+    let field = null;
+    try{
+      field = el.querySelector('.field-text') ||
+        ((el.matches && el.matches('.field, .field2, .field-text'))
+          ? el
+          : el.querySelector('.field, .field2, .field-text'));
+    }catch(e){ field = null; }
+
+    let text = readCleanNodeText(field);
+    if(text) return stripInternalKeyPrefix(text, el);
+    text = readCleanNodeText(el);
+    return stripInternalKeyPrefix(text, el);
+  }
+
+  function getCssNumber(el, prop, fallback){
+    try{
+      const cs = window.getComputedStyle(el);
+      const raw = cs.getPropertyValue(prop);
+      const n = parseFloat(raw);
+      return Number.isFinite(n) ? n : fallback;
+    }catch(e){ return fallback; }
+  }
+
+  function extractOverlayPages(){
+    let pageEls = Array.from(document.querySelectorAll('#printArea .a4, #printArea .A4, #printArea .sheet'));
+    if(!pageEls.length) pageEls = Array.from(document.querySelectorAll('.a4, .A4, .sheet'));
+    return pageEls.map((pageEl, pageIndex) => {
+      const pageRect = pageEl.getBoundingClientRect();
+      const items = [];
+      const posEls = Array.from(pageEl.querySelectorAll('.pos'));
+      for(const el of posEls){
+        if(!isVisible(el)) continue;
+        const text = textFromPos(el);
+        if(!text) continue;
+        const rect = el.getBoundingClientRect();
+        if(!pageRect.width || !pageRect.height) continue;
+        if(rect.right < pageRect.left || rect.left > pageRect.right || rect.bottom < pageRect.top || rect.top > pageRect.bottom) continue;
+
+        const textEl = el.querySelector('.field, .field2, .field-text') || el;
+        const tcs = window.getComputedStyle(textEl);
+        let fontPx = parseFloat(tcs.fontSize || '') || getCssNumber(el, 'font-size', 12);
+        let fontPt = Math.max(5, Math.min(18, fontPx * 72 / 96));
+        const fontWeight = String(tcs.fontWeight || '').toLowerCase();
+        const bold = fontWeight === 'bold' || parseInt(fontWeight,10) >= 600 || el.classList.contains('mark');
+
+        const xPct = (rect.left - pageRect.left) / pageRect.width;
+        const yBottomPct = (pageRect.bottom - rect.bottom) / pageRect.height;
+        const wPct = rect.width > 0 ? (rect.width / pageRect.width) : 0.25;
+        const baselineAdjustPt = el.classList.contains('mark') ? 1.2 : 1.6;
+        items.push({
+          id: el.id || el.getAttribute('data-key') || el.getAttribute('data-field') || '',
+          text,
+          xPct,
+          yBottomPct,
+          wPct,
+          fontPt,
+          bold,
+          baselineAdjustPt,
+          isMark: el.classList.contains('mark') || text === 'X'
+        });
+      }
+      return {pageIndex, items};
+    });
+  }
+
+  function respond(ev, data){
+    try{
+      ev.source.postMessage(Object.assign({__unified:true, rid: ev.data && ev.data.rid}, data), '*');
+    }catch(e){}
+  }
+
+  window.addEventListener('message', function(ev){
+    const msg = ev.data;
+    if(!msg || typeof msg !== 'object') return;
+    if(msg.__unified !== true) return;
+
+    if(msg.type === 'GET_OVERLAY_PAGES_V26'){
+      try{
+        respond(ev, {type:'GET_OVERLAY_PAGES_V26_RESULT', ok:true, pages: extractOverlayPages()});
+      }catch(e){
+        respond(ev, {type:'GET_OVERLAY_PAGES_V26_RESULT', ok:false, pages: [], error: e && e.message ? e.message : String(e)});
+      }
+      return;
+    }
+
+    if(msg.type === 'GET_FIELD_VALUE_V26'){
+      let value = '';
+      try{
+        const id = String(msg.fieldId || '');
+        const el = id ? document.getElementById(id) : null;
+        if(el){
+          if(el.type === 'checkbox') value = el.checked ? (el.value || '1') : '';
+          else value = String(el.value || el.textContent || '').trim();
+        }
+      }catch(e){}
+      respond(ev, {type:'GET_FIELD_VALUE_V26_RESULT', value});
+      return;
+    }
   }, false);
 })();
 </script>

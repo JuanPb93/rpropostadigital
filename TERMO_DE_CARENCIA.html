@@ -1188,5 +1188,173 @@ if(msg.type === 'EXPORT_HTML'){
 })();
 </script>
 
+
+
+<script id="PDF_ORIGINAL_OVERLAY_BRIDGE_V26">
+/* V2.6 - Bridge de extração para PDF original.
+   O index.html não acessa mais document/contentDocument do iframe.
+   Cada documento mede suas próprias posições e devolve somente dados simples via postMessage. */
+(function(){
+  if(window.__pdfOriginalOverlayBridgeV26) return;
+  window.__pdfOriginalOverlayBridgeV26 = true;
+
+  function normalizeOverlayText(text){
+    return String(text || '')
+      .replace(/\u00a0/g, ' ')
+      .replace(/[\u200B-\u200D\uFEFF]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  function isVisible(el){
+    if(!el) return false;
+    const cs = window.getComputedStyle(el);
+    if(!cs || cs.display === 'none' || cs.visibility === 'hidden' || parseFloat(cs.opacity || '1') === 0) return false;
+    let cur = el.parentElement;
+    while(cur){
+      const ccs = window.getComputedStyle(cur);
+      if(ccs && (ccs.display === 'none' || ccs.visibility === 'hidden')) return false;
+      cur = cur.parentElement;
+    }
+    return true;
+  }
+
+  function readCleanNodeText(node){
+    if(!node) return '';
+    const clone = node.cloneNode(true);
+    try{
+      clone.querySelectorAll('.calib-label, .calib-handle, .calib-resize, .gridlines, script, style').forEach(n => n.remove());
+    }catch(e){}
+    return normalizeOverlayText(clone.textContent || '');
+  }
+
+  function stripInternalKeyPrefix(text, el){
+    text = normalizeOverlayText(text);
+    if(!text || !el) return text;
+    const keys = [];
+    try{ if(el.id) keys.push(el.id); }catch(e){}
+    try{ if(el.getAttribute('data-key')) keys.push(el.getAttribute('data-key')); }catch(e){}
+    try{ if(el.getAttribute('data-calib')) keys.push(el.getAttribute('data-calib')); }catch(e){}
+    try{ if(el.getAttribute('data-calib-label')) keys.push(el.getAttribute('data-calib-label')); }catch(e){}
+    try{ if(el.getAttribute('data-field')) keys.push(el.getAttribute('data-field')); }catch(e){}
+    for(const k of keys){
+      const key = normalizeOverlayText(k);
+      if(!key) continue;
+      if(text === key) return '';
+      if(text.startsWith(key + ' ')) return normalizeOverlayText(text.slice(key.length));
+      if(text.startsWith(key + ':')) return normalizeOverlayText(text.slice(key.length + 1));
+      if(text.startsWith(key + ' - ')) return normalizeOverlayText(text.slice(key.length + 3));
+    }
+    return normalizeOverlayText(text.replace(/^(out_[A-Za-z0-9_\-]+)\s*/,'').replace(/^(p_[A-Za-z0-9_\-]+)\s*/,''));
+  }
+
+  function textFromPos(el){
+    if(!el) return '';
+    if(el.classList && el.classList.contains('mark')){
+      const markText = normalizeOverlayText(el.textContent || '');
+      return markText ? 'X' : '';
+    }
+    let field = null;
+    try{
+      field = el.querySelector('.field-text') ||
+        ((el.matches && el.matches('.field, .field2, .field-text'))
+          ? el
+          : el.querySelector('.field, .field2, .field-text'));
+    }catch(e){ field = null; }
+
+    let text = readCleanNodeText(field);
+    if(text) return stripInternalKeyPrefix(text, el);
+    text = readCleanNodeText(el);
+    return stripInternalKeyPrefix(text, el);
+  }
+
+  function getCssNumber(el, prop, fallback){
+    try{
+      const cs = window.getComputedStyle(el);
+      const raw = cs.getPropertyValue(prop);
+      const n = parseFloat(raw);
+      return Number.isFinite(n) ? n : fallback;
+    }catch(e){ return fallback; }
+  }
+
+  function extractOverlayPages(){
+    let pageEls = Array.from(document.querySelectorAll('#printArea .a4, #printArea .A4, #printArea .sheet'));
+    if(!pageEls.length) pageEls = Array.from(document.querySelectorAll('.a4, .A4, .sheet'));
+    return pageEls.map((pageEl, pageIndex) => {
+      const pageRect = pageEl.getBoundingClientRect();
+      const items = [];
+      const posEls = Array.from(pageEl.querySelectorAll('.pos'));
+      for(const el of posEls){
+        if(!isVisible(el)) continue;
+        const text = textFromPos(el);
+        if(!text) continue;
+        const rect = el.getBoundingClientRect();
+        if(!pageRect.width || !pageRect.height) continue;
+        if(rect.right < pageRect.left || rect.left > pageRect.right || rect.bottom < pageRect.top || rect.top > pageRect.bottom) continue;
+
+        const textEl = el.querySelector('.field, .field2, .field-text') || el;
+        const tcs = window.getComputedStyle(textEl);
+        let fontPx = parseFloat(tcs.fontSize || '') || getCssNumber(el, 'font-size', 12);
+        let fontPt = Math.max(5, Math.min(18, fontPx * 72 / 96));
+        const fontWeight = String(tcs.fontWeight || '').toLowerCase();
+        const bold = fontWeight === 'bold' || parseInt(fontWeight,10) >= 600 || el.classList.contains('mark');
+
+        const xPct = (rect.left - pageRect.left) / pageRect.width;
+        const yBottomPct = (pageRect.bottom - rect.bottom) / pageRect.height;
+        const wPct = rect.width > 0 ? (rect.width / pageRect.width) : 0.25;
+        const baselineAdjustPt = el.classList.contains('mark') ? 1.2 : 1.6;
+        items.push({
+          id: el.id || el.getAttribute('data-key') || el.getAttribute('data-field') || '',
+          text,
+          xPct,
+          yBottomPct,
+          wPct,
+          fontPt,
+          bold,
+          baselineAdjustPt,
+          isMark: el.classList.contains('mark') || text === 'X'
+        });
+      }
+      return {pageIndex, items};
+    });
+  }
+
+  function respond(ev, data){
+    try{
+      ev.source.postMessage(Object.assign({__unified:true, rid: ev.data && ev.data.rid}, data), '*');
+    }catch(e){}
+  }
+
+  window.addEventListener('message', function(ev){
+    const msg = ev.data;
+    if(!msg || typeof msg !== 'object') return;
+    if(msg.__unified !== true) return;
+
+    if(msg.type === 'GET_OVERLAY_PAGES_V26'){
+      try{
+        respond(ev, {type:'GET_OVERLAY_PAGES_V26_RESULT', ok:true, pages: extractOverlayPages()});
+      }catch(e){
+        respond(ev, {type:'GET_OVERLAY_PAGES_V26_RESULT', ok:false, pages: [], error: e && e.message ? e.message : String(e)});
+      }
+      return;
+    }
+
+    if(msg.type === 'GET_FIELD_VALUE_V26'){
+      let value = '';
+      try{
+        const id = String(msg.fieldId || '');
+        const el = id ? document.getElementById(id) : null;
+        if(el){
+          if(el.type === 'checkbox') value = el.checked ? (el.value || '1') : '';
+          else value = String(el.value || el.textContent || '').trim();
+        }
+      }catch(e){}
+      respond(ev, {type:'GET_FIELD_VALUE_V26_RESULT', value});
+      return;
+    }
+  }, false);
+})();
+</script>
+
 </body>
 </html>
