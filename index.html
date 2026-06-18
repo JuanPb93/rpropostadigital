@@ -1532,12 +1532,14 @@ try{
   function validatePropostaV19(doc){
     const items = [];
 
-    addMissingV19(items, !!doc.querySelector('input[name="mov"]:checked'), 'Movimentação: marque uma opção programada ou imediata.');
+    const movMarcada = doc.querySelector('input[name="mov"]:checked');
+    const taxaIsento = !!(doc.getElementById('taxa_isento') && doc.getElementById('taxa_isento').checked);
+    addMissingV19(items, !!movMarcada, 'Movimentação: marque uma opção programada ou imediata.');
 
     addMissingV19(items, hasV19(doc,'vendedor'), 'Dados comerciais: Vendedor.');
     addMissingV19(items, moneyOkV19(doc,'valor_plano'), 'Dados comerciais: Valor do plano.');
-    addMissingV19(items, percentOkV19(doc,'pct_taxa'), 'Dados comerciais: % da taxa.');
-    addMissingV19(items, moneyOkV19(doc,'taxa'), 'Dados comerciais: Taxa.');
+    addMissingV19(items, taxaIsento || percentOkV19(doc,'pct_taxa'), 'Dados comerciais: % da taxa.');
+    addMissingV19(items, taxaIsento || moneyOkV19(doc,'taxa'), 'Dados comerciais: Taxa.');
     addMissingV19(items, !!(valV19(doc,'contrato_nome') || valV19(doc,'contrato')), 'Dados comerciais: Contrato.');
 
     addMissingV19(items, hasV19(doc,'nome_titular'), 'Titular: Nome do titular.');
@@ -1559,7 +1561,8 @@ try{
     addMissingV19(items, hasV19(doc,'cidade'), 'Endereço: Cidade.');
     addMissingV19(items, hasV19(doc,'estado'), 'Endereço: UF.');
 
-    addMissingV19(items, !!doc.querySelector('.psel:checked'), 'Carência / Portabilidade / Súmula 21: marque pelo menos uma opção.');
+    const exigePSC = !!movMarcada && movMarcada.value !== 'imm_rn';
+    addMissingV19(items, !exigePSC || !!doc.querySelector('.psel:checked'), 'Carência / Portabilidade / Súmula 21: marque pelo menos uma opção.');
     addMissingV19(items, hasV19(doc,'nome_plano'), 'Plano: selecione um plano.');
     addMissingV19(items, hasV19(doc,'codigo_plano'), 'Plano: código do plano.');
 
