@@ -700,7 +700,7 @@ function formatDate(v){let d=onlyDigits(v).slice(0,8);return d.replace(/(\d{2})(
 function formatCns(v){let d=onlyDigits(v).slice(0,15);return d.replace(/(\d{3})(\d)/,'$1 $2').replace(/(\d{4})(\d)/,'$1 $2').replace(/(\d{4})(\d)/,'$1 $2')}
 function formatCep(v){let d=onlyDigits(v).slice(0,8);return d.replace(/(\d{5})(\d)/,'$1-$2')}
 function formatPhone(v){let d=onlyDigits(v).slice(0,11); if(d.length<3)return d?'('+d:''; let ddd=d.slice(0,2),r=d.slice(2); if(r.length<=4)return '('+ddd+') '+r; if(r.length<=8)return '('+ddd+') '+r.slice(0,4)+(r.slice(4)?'-'+r.slice(4):''); return '('+ddd+') '+r.slice(0,5)+(r.slice(5)?'-'+r.slice(5):'')}
-function allowedName(s){return upper((s||'').replace(/[^A-Za-zÀ-ÿ' ]+/g,''))} function allowedAddress(s){return upper((s||'').replace(/[^A-Za-zÀ-ÿ' ]+/g,''))} function allowedComplement(s){return upper((s||'').replace(/[^A-Za-zÀ-ÿ0-9/\- ]+/g,''))}
+function allowedName(s){return upper((s||'').replace(/[^A-Za-zÀ-ÿ' ]+/g,''))} function allowedAddress(s){return upper((s||'').replace(/[^A-Za-zÀ-ÿ'0-9 ]+/g,''))} function allowedComplement(s){return upper((s||'').replace(/[^A-Za-zÀ-ÿ0-9/\- ]+/g,''))}
 function attachMask(id,formatter){let el=$(id); if(!el)return; el.addEventListener('input',()=>{el.value=formatter(el.value)})}
 function attachText(id,fn){let el=$(id); if(!el)return; el.addEventListener('input',()=>{let p=el.selectionStart; el.value=fn(el.value); try{el.setSelectionRange(p,p)}catch(e){}})}
 function centsToBRL(cents){return ((cents||0)/100).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}
