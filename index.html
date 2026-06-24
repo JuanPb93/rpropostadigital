@@ -590,7 +590,7 @@
   }
 
   async function validateRequired(seq){
-  //return []; // TEMPORÁRIO: desabilita validação para calibrar posições
+  return []; // TEMPORÁRIO: desabilita validação para calibrar posições
     const groups = [];
     for(const it of (seq || [])){
       if(!it || !it.iframe) continue;
@@ -1469,7 +1469,7 @@
     await ensureOutDoc();
     await appendAttachments(outDoc);
 
-    outDoc.setTitle(getPdfFileName().replace(/\.pdf$/i,''));
+    outDoc.setTitle((pdfFileName || getPdfFileName()).replace(/\.pdf$/i,''));
     outDoc.setProducer('R-Proposta Digital v2.6.14 - PDF final limpo');
     return await outDoc.save({useObjectStreams:true, addDefaultPage:false, updateFieldAppearances:false});
   }
