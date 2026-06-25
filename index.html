@@ -106,7 +106,7 @@
     <div class="brand">
       <div>
         <div class="title">R-Proposta Digital</div>
-        <div class="sub">v2.6.14 • PDF final limpo</div>
+        <div class="sub">v2.8.1 • PDF final limpo</div>
       </div>
       <div class="pill" title="Persistência local">localStorage</div>
     </div>
@@ -143,7 +143,7 @@
   <div class="modal">
     <h2 id="modalTitle">Faltam campos obrigatórios</h2>
     <div class="small">
-      Preencha os itens abaixo e tente novamente. (O botão <b>GERAR PDF / IMPRIMIR</b> só funciona quando <b>tudo</b> estiver válido.)
+      Preencha os itens abaixo e tente novamente. (O botão <b>GERAR PDF</b> só funciona quando <b>tudo</b> estiver válido.)
     </div>
     <div class="list" id="modalList"></div>
     <div class="actions">
@@ -1470,7 +1470,7 @@
     await appendAttachments(outDoc);
 
 	outDoc.setTitle((pdfFileName || getPdfFileName()).replace(/\.pdf$/i,''));
-	outDoc.setProducer('R-Proposta Digital v2.6.14 - PDF final limpo');
+	outDoc.setProducer('R-Proposta Digital v2.8.1 - PDF final limpo');
 	return await outDoc.save({useObjectStreams:true, addDefaultPage:false, updateFieldAppearances:false});
   }
 

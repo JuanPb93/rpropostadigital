@@ -130,15 +130,7 @@
     </div>
 
     <div id="errbox" class="errbox"></div>
-
-    <div class="row">
-      <button type="button" class="secondary" onclick="novo(); return false;">NOVO</button>
-      <button type="button" class="light" onclick="preview(); return false;">VER PRÉVIA</button>
-      <button type="button" id="btn_print" class="printbtn" onclick="gerarPDF(); return false;" disabled>GERAR PDF / IMPRIMIR</button>
-      <button type="button" class="light" onclick="toggleCalib(); return false;">MODO CALIBRAÇÃO</button>
-    </div>
-    <div class="hint">Dica: na impressão, desmarque “Cabeçalhos e rodapés” e marque “Gráficos de plano de fundo”.</div>
-  </div>
+</div>
 
   <div id="printArea">
     <div class="a4" id="page1">
@@ -154,11 +146,7 @@
         </div>
       </div>
     </div>
-
-    <div class="preview-footer">
-      <button type="button" class="light" onclick="voltar(); return false;">VOLTAR</button>
-    </div>
-  </div>
+</div>
 
 </div>
 
@@ -215,10 +203,10 @@
     elNome.classList.remove('neon-red','neon-green');
     if(!v){
       elNome.classList.add('neon-red');
-      btnPrint.disabled = true;
+      if(btnPrint) btnPrint.disabled = true;
     }else{
       elNome.classList.add('neon-green');
-      btnPrint.disabled = false;
+      if(btnPrint) btnPrint.disabled = false;
     }
   }
 
@@ -412,221 +400,104 @@
 
 </script>
 
-
-<script id="UNIFIED_SYSTEM_HIDE_PRINTBTN_ONLY">
-/* ocultar SOMENTE o botão "GERAR PDF / IMPRIMIR" (mantém NOVO / VER PRÉVIA / etc.) */
+<script id="UNIFIED_SYSTEM_BRIDGE_V28_1">
+/* V2.8.1 - ponte interna limpa para o GERAR PDF atual do index.html.
+   Não depende dos botões antigos NOVO / VER PRÉVIA / VOLTAR / GERAR PDF / IMPRIMIR. */
 (function(){
-  function hide(){
-    try{
-      const candidates = Array.from(document.querySelectorAll('button, input[type="button"], input[type="submit"]'));
-      candidates.forEach(el=>{
-        const t = (el.textContent || el.value || '').toUpperCase();
-        if(t.includes('GERAR PDF')){
-          el.style.display = 'none';
-        }
-      });
-    }catch(e){}
-  }
-  if(document.readyState === 'loading'){
-    document.addEventListener('DOMContentLoaded', hide);
-  }else{
-    hide();
-  }
-})();
-</script>
-
-<script id="UNIFIED_SYSTEM_BRIDGE_V1">
-/* UNIFIED_SYSTEM_BRIDGE_V1 - comunicação com index.html via postMessage (compatível com file:// no Chrome) */
-(function(){
-  const DOC_LABEL = "CARTA_ANS.html";
-
-  function findPrintButton(){
-    const all = Array.from(document.querySelectorAll('button, input[type="button"], input[type="submit"]'));
-    return all.find(b => ((b.textContent || b.value || '').toUpperCase().includes('GERAR PDF')));
-  }
-
-  function requiredCheck(){
-    const errors = [];
-    try{
-      const requiredEls = Array.from(document.querySelectorAll('[required]'));
-      for(const el of requiredEls){
-        const tag = (el.tagName||'').toLowerCase();
-        const type = (el.getAttribute('type')||'').toLowerCase();
-        const id = el.id || el.name || '';
-        const label = id ? id : (tag + (type?(':'+type):''));
-        if(type === 'checkbox' || type === 'radio'){
-          if(!el.checked) errors.push('Marcar: ' + label);
-        } else if(tag === 'select'){
-          const v = (el.value||'').trim();
-          if(!v) errors.push('Selecionar: ' + label);
-        } else {
-          const v = (el.value||'').trim();
-          if(!v) errors.push('Preencher: ' + label);
-        }
-      }
-    }catch(e){}
-    return errors;
-  }
-
-  async function runInternalValidation(){
-    const errors = [];
-    // 1) required
-    errors.push(...requiredCheck());
-
-    // 2) clicar no botão interno de imprimir com print/alert interceptados
-    const btn = findPrintButton();
-    if(btn){
-      const oldPrint = window.print;
-      const oldAlert = window.alert;
-      let alertMsg = null;
-
-      window.print = function(){ /* no-op */ };
-      window.alert = function(msg){ alertMsg = String(msg||''); };
-
-      try{
-        btn.click();
-        await new Promise(r=>setTimeout(r, 200));
-      }catch(e){}
-
-      window.print = oldPrint;
-      window.alert = oldAlert;
-
-      if(alertMsg) errors.push(alertMsg);
-    }
-    // remove duplicados / vazios
-    return Array.from(new Set(errors.filter(Boolean)));
-  }
-
-  function doInternalPrint(){
-    const btn = findPrintButton();
-    if(btn){
-      btn.click();
-      return true;
-    }
-    try{ window.print(); return true; }catch(e){ return false; }
-  }
-
-  window.addEventListener('message', async (ev) => {
-    const msg = ev.data;
-    if(!msg || typeof msg !== 'object') return;
-    if(msg.__unified !== true) return;
-
-    if(msg.type === 'PING'){
-      ev.source?.postMessage({__unified:true, type:'PONG', rid: msg.rid, label:DOC_LABEL}, '*');
-      return;
-    }
-
-    if(msg.type === 'VALIDATE'){
-      const errs = await runInternalValidation();
-      ev.source?.postMessage({__unified:true, type:'VALIDATE_RESULT', rid: msg.rid, ok: errs.length===0, errors: errs, label:DOC_LABEL}, '*');
-      return;
-    }
-
-    if(msg.type === 'PRINT'){
-      const ok = doInternalPrint();
-      ev.source?.postMessage({__unified:true, type:'PRINT_RESULT', rid: msg.rid, ok, label:DOC_LABEL}, '*');
-      return;
-    }
-
-
-// --- Bridge extra para VISUALIZAR unificado (não altera UI normal) ---
-if(msg.type === 'PREPARE_PRINT'){
-  try{
-    if(typeof window.preview === 'function') window.preview();
-  }catch(e){}
-  ev.source?.postMessage({__unified:true, type:'PREPARE_PRINT_OK', rid: msg.rid, label:DOC_LABEL}, '*');
-  return;
-}
-
-if(msg.type === 'RESTORE_VIEW'){
-  try{
-    if(typeof window.voltar === 'function') window.voltar();
-    else if(typeof window.novo === 'function') window.novo(); // fallback seguro
-  }catch(e){}
-  ev.source?.postMessage({__unified:true, type:'RESTORE_VIEW_OK', rid: msg.rid, label:DOC_LABEL}, '*');
-  return;
-}
-
-if(msg.type === 'EXPORT_HTML'){
-  try{
-    const html = '<!doctype html>\n' + document.documentElement.outerHTML;
-    ev.source?.postMessage({__unified:true, type:'EXPORT_HTML_RESULT', rid: msg.rid, label:DOC_LABEL, html}, '*');
-  }catch(e){
-    ev.source?.postMessage({__unified:true, type:'EXPORT_HTML_RESULT', rid: msg.rid, label:DOC_LABEL, html:''}, '*');
-  }
-  return;
-}
-  });
-})();
-</script>
-
-
-<script id="UNIFIED_SYSTEM_BRIDGE_V2">
-/* Bridge V2: validação sem efeitos colaterais + preparar/restaurar prévia para impressão unificada */
-(function(){
-  if(window.__unifiedBridgeV2) return;
-  window.__unifiedBridgeV2 = true;
-
-  function findButtonByText(substr){
-    substr = (substr||'').toUpperCase();
-    const btns = Array.from(document.querySelectorAll('button, input[type="button"], input[type="submit"]'));
-    for(const b of btns){
-      const t = ((b.textContent||b.value||'')+'').toUpperCase().trim();
-      if(t.includes(substr)) return b;
-    }
-    return null;
-  }
-
-  function collectNativeValidityErrors(){
-    const els = Array.from(document.querySelectorAll('input, select, textarea'));
-    const errors = [];
-    for(const el of els){
-      const cs = window.getComputedStyle(el);
-      if(cs.display === 'none' || cs.visibility === 'hidden') continue;
-      if(el.disabled) continue;
-      if(typeof el.checkValidity === 'function' && !el.checkValidity()){
-        const label = el.getAttribute('data-label') || el.getAttribute('aria-label') || el.name || el.id || 'campo';
-        if(el.validity && el.validity.valueMissing) errors.push('Preencher: ' + label);
-        else if(el.validity && el.validity.patternMismatch) errors.push('Corrigir formato: ' + label);
-        else errors.push('Verificar: ' + label);
-      }
-    }
-    return Array.from(new Set(errors));
-  }
+  if(window.__unifiedBridgeV281) return;
+  window.__unifiedBridgeV281 = true;
 
   function respond(ev, data){
     try{
-      ev.source.postMessage(Object.assign({__unified:true, rid: ev.data && ev.data.rid}, data), '*');
+      ev.source.postMessage(Object.assign({__unified:true, rid: ev.data && ev.data.rid}, data || {}), '*');
     }catch(e){}
   }
 
-  window.addEventListener('message', (ev)=>{
-    const msg = ev.data;
-    if(!msg || typeof msg !== 'object') return;
-    if(msg.__unified !== true) return;
+  function callIfExists(name){
+    try{
+      var fn = window[name];
+      if(typeof fn === 'function'){
+        fn();
+        return true;
+      }
+    }catch(e){}
+    return false;
+  }
+
+  function prepareView(){
+    if(callIfExists('preview')) return true;
+    try{ if(typeof fillPrint === 'function') fillPrint(); }catch(e){}
+    try{ if(typeof applyPosAll === 'function') applyPosAll(); }catch(e){}
+    try{ document.body.classList.add('previewing'); }catch(e){}
+    try{
+      var fill = document.getElementById('fillArea');
+      var print = document.getElementById('printArea');
+      if(fill) fill.style.display = 'none';
+      if(print){
+        print.style.display = 'block';
+        print.classList.add('preview-active');
+      }
+    }catch(e){}
+    return true;
+  }
+
+  function restoreView(){
+    if(callIfExists('voltar')) return true;
+    try{ document.body.classList.remove('previewing'); }catch(e){}
+    try{
+      var fill = document.getElementById('fillArea');
+      var print = document.getElementById('printArea');
+      if(print){
+        print.classList.remove('preview-active');
+        print.style.display = 'none';
+      }
+      if(fill) fill.style.display = 'block';
+    }catch(e){}
+    return true;
+  }
+
+  window.addEventListener('message', function(ev){
+    var msg = ev.data;
+    if(!msg || typeof msg !== 'object' || msg.__unified !== true) return;
 
     if(msg.type === 'PING'){
-      respond(ev, {type:'PONG'});
+      respond(ev, {type:'PONG', ok:true});
       return;
     }
 
     if(msg.type === 'VALIDATE'){
-      const errors = collectNativeValidityErrors();
-      respond(ev, {type:'VALIDATE_RESULT', ok: errors.length===0, errors});
+      var errors = [];
+      try{
+        if(typeof window.validate === 'function'){
+          var ok = window.validate();
+          if(!ok) errors.push('Revise os campos obrigatórios deste documento.');
+        }
+      }catch(e){
+        errors.push(e && e.message ? e.message : String(e));
+      }
+      respond(ev, {type:'VALIDATE_RESULT', ok: errors.length === 0, errors: errors});
       return;
     }
 
     if(msg.type === 'PREPARE_PRINT'){
-      const prev = findButtonByText('VER PRÉVIA');
-      if(prev){ try{ prev.click(); }catch(e){} }
-      setTimeout(()=>respond(ev, {type:'PREPARE_PRINT_OK', ok:true}), 160);
+      prepareView();
+      setTimeout(function(){ respond(ev, {type:'PREPARE_PRINT_OK', ok:true}); }, 160);
       return;
     }
 
     if(msg.type === 'RESTORE_VIEW'){
-      const back = findButtonByText('VOLTAR');
-      if(back){ try{ back.click(); }catch(e){} }
-      setTimeout(()=>respond(ev, {type:'RESTORE_VIEW_OK', ok:true}), 120);
+      restoreView();
+      setTimeout(function(){ respond(ev, {type:'RESTORE_VIEW_OK', ok:true}); }, 120);
+      return;
+    }
+
+    if(msg.type === 'EXPORT_HTML'){
+      try{
+        prepareView();
+        respond(ev, {type:'EXPORT_HTML_RESULT', ok:true, html: document.documentElement.outerHTML});
+      }catch(e){
+        respond(ev, {type:'EXPORT_HTML_RESULT', ok:false, html:'', error: e && e.message ? e.message : String(e)});
+      }
       return;
     }
   }, false);
