@@ -106,13 +106,14 @@
     <div class="brand">
       <div>
         <div class="title">R-Proposta Digital</div>
-        <div class="sub">v2.8.1 • PDF final limpo</div>
+        <div class="sub">v2.9 • Preenchimento de proposta</div>
       </div>
       <div class="pill" title="Persistência local">localStorage</div>
     </div>
 
     <div class="menu" id="menu"></div>
-<button id="viewUnifiedBtn" class="masterbtn" type="button">GERAR PDF</button>
+<button id="viewUnifiedBtn" class="masterbtn" type="button">VER PROPOSTA</button>
+<button id="downloadUnifiedBtn" class="masterbtn" type="button">BAIXAR PROPOSTA</button>
 
     <div class="attachBox">
 <div class="attachActions">
@@ -143,7 +144,7 @@
   <div class="modal">
     <h2 id="modalTitle">Faltam campos obrigatórios</h2>
     <div class="small">
-      Preencha os itens abaixo e tente novamente. (O botão <b>GERAR PDF</b> só funciona quando <b>tudo</b> estiver válido.)
+      Preencha os itens abaixo e tente novamente. (Os botões <b>VER PROPOSTA</b> e <b>BAIXAR PROPOSTA</b> só funcionam quando <b>tudo</b> estiver válido.)
     </div>
     <div class="list" id="modalList"></div>
     <div class="actions">
@@ -620,13 +621,15 @@
     const name = String(value || '')
       .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
       .toUpperCase()
-      .replace(/[^A-Z0-9\s_-]+/g,'')
+      .replace(/[’'`´]/g,'')
+      .replace(/[-_]+/g,' ')
+      .replace(/[\\/:*?"<>|]+/g,' ')
+      .replace(/[^A-Z0-9\s]+/g,' ')
       .trim()
-      .replace(/\s+/g,'_')
-      .replace(/_+/g,'_')
-      .replace(/^_+|_+$/g,'')
-      .slice(0,90);
-    return name || 'DOCUMENTO_UNIFICADO';
+      .replace(/\s+/g,' ')
+      .slice(0,90)
+      .trim();
+    return name || 'DOCUMENTO UNIFICADO';
   }
 
   function getPdfFileName(){
@@ -637,7 +640,7 @@
       const titular = st && st.values && st.values.nome_titular ? st.values.nome_titular : '';
       return sanitizePdfBaseName(titular) + '.pdf';
     }catch(e){
-      return 'DOCUMENTO_UNIFICADO.pdf';
+      return 'DOCUMENTO UNIFICADO.pdf';
     }
   }
 
@@ -699,7 +702,7 @@
 
     if(w){
       try{
-        try{ w.document.title = pdfFileName || 'DOCUMENTO_UNIFICADO.pdf'; }catch(_t){}
+        try{ w.document.title = pdfFileName || 'DOCUMENTO UNIFICADO.pdf'; }catch(_t){}
         w.location.replace(url);
         try{ w.focus(); }catch(_f){}
         return {opened:true, url};
@@ -1470,23 +1473,37 @@
     await appendAttachments(outDoc);
 
 	outDoc.setTitle((pdfFileName || getPdfFileName()).replace(/\.pdf$/i,''));
-	outDoc.setProducer('R-Proposta Digital v2.8.1 - PDF final limpo');
+	outDoc.setProducer('R-Proposta Digital v2.9 - PDF final limpo');
 	return await outDoc.save({useObjectStreams:true, addDefaultPage:false, updateFieldAppearances:false});
   }
 
   let busy = false;
-  async function onGenerateClick(ev){
+
+  function downloadPdfBlob(blob, pdfFileName){
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = pdfFileName || 'DOCUMENTO UNIFICADO.pdf';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(()=>{ try{ URL.revokeObjectURL(url); }catch(e){} }, 120000);
+  }
+
+  async function onPdfActionClick(ev, action){
     if(busy) return;
     busy = true;
-    const btn = ev && ev.currentTarget ? ev.currentTarget : document.getElementById('viewUnifiedBtn');
-    const oldTxt = btn ? btn.textContent : 'GERAR PDF';
+    const btn = ev && ev.currentTarget ? ev.currentTarget : null;
+    const oldTxt = btn ? btn.textContent : '';
+    const shouldView = action === 'view';
     let pdfWindow = null;
     try{
       if(ev){ ev.preventDefault(); ev.stopPropagation(); }
-      // V2.6.12: abre imediatamente no clique para funcionar no Live Server e GitHub
-      // mesmo quando o PDF demora para ser montado.
-      pdfWindow = openPreparingPdfWindow();
-      if(btn){ btn.disabled = true; btn.textContent = 'GERANDO PDF...'; }
+
+      // VISUALIZAR PROPOSTA: mantém o fluxo da v2.8.1, abrindo a prévia em nova aba.
+      if(shouldView) pdfWindow = openPreparingPdfWindow();
+
+      if(btn){ btn.disabled = true; btn.textContent = shouldView ? 'ABRINDO PROPOSTA...' : 'BAIXANDO PROPOSTA...'; }
 
       const seq = collectWrapsInOrder();
       const validationProblems = await validateRequired(seq);
@@ -1504,39 +1521,47 @@
       const pdfFileName = await getPdfFileNameSafe(seq);
       const pdfBytes = await generatePdfOriginal(seq, pdfFileName);
       const blob = new Blob([pdfBytes], {type:'application/pdf'});
-      const result = openPdfBlobNamed(blob, pdfFileName, pdfWindow);
-      if(!result.opened){
-        const a = document.createElement('a');
-        a.href = result.url;
-        a.download = pdfFileName;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
+
+      if(shouldView){
+        const result = openPdfBlobNamed(blob, pdfFileName, pdfWindow);
+        if(!result.opened) downloadPdfBlob(blob, pdfFileName);
+        else setTimeout(()=>{ try{ URL.revokeObjectURL(result.url); }catch(e){} }, 120000);
+      }else{
+        // BAIXAR PROPOSTA: mantém o fluxo da v1_teste, baixando direto com o nome do titular.
+        downloadPdfBlob(blob, pdfFileName);
       }
-      setTimeout(()=>{ try{ URL.revokeObjectURL(result.url); }catch(e){} }, 120000);
     }catch(err){
       try{ console.error(err); }catch(_){}
       const msg = (err && err.message) ? err.message : 'Erro ao gerar PDF. Abra o console (F12) e envie o print do erro.';
-      try{ writePdfErrorWindow(pdfWindow, msg); }catch(_e){}
+      if(shouldView){ try{ writePdfErrorWindow(pdfWindow, msg); }catch(_e){} }
       try{ alert(msg); }catch(_){}
     }finally{
-      if(btn){ btn.disabled = false; btn.textContent = oldTxt || 'GERAR PDF'; }
+      if(btn){ btn.disabled = false; btn.textContent = oldTxt || (shouldView ? 'VISUALIZAR PROPOSTA' : 'BAIXAR PROPOSTA'); }
       busy = false;
     }
   }
 
   function attachGenerator(){
-    const btn = document.getElementById('viewUnifiedBtn');
-    if(!btn) return false;
-    const clone = btn.cloneNode(true);
-    btn.parentNode.replaceChild(clone, btn);
-    clone.textContent = 'GERAR PDF';
-    clone.title = 'Gerar PDF final limpo';
-    clone.addEventListener('click', onGenerateClick, {capture:true});
+    const viewBtn = document.getElementById('viewUnifiedBtn');
+    const downloadBtn = document.getElementById('downloadUnifiedBtn');
+    if(!viewBtn || !downloadBtn) return false;
+
+    const viewClone = viewBtn.cloneNode(true);
+    viewBtn.parentNode.replaceChild(viewClone, viewBtn);
+    viewClone.textContent = 'VER PROPOSTA';
+    viewClone.title = 'Visualizar a proposta final preenchida';
+    viewClone.addEventListener('click', (ev)=>onPdfActionClick(ev, 'view'), {capture:true});
+
+    const downloadClone = downloadBtn.cloneNode(true);
+    downloadBtn.parentNode.replaceChild(downloadClone, downloadBtn);
+    downloadClone.textContent = 'BAIXAR PROPOSTA';
+    downloadClone.title = 'Baixar a proposta final com o nome do titular';
+    downloadClone.addEventListener('click', (ev)=>onPdfActionClick(ev, 'download'), {capture:true});
+
     return true;
   }
 
-  // Aguarda o patch antigo terminar e assume o botão GERAR PDF com o novo motor.
+  // Aguarda o carregamento e assume os botões de visualizar/baixar com o motor PDF atual.
   let tries = 0;
   const timer = setInterval(()=>{
     tries++;
