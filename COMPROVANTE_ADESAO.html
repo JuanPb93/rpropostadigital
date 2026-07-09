@@ -559,7 +559,7 @@ button[onclick*="toggleCalib"]{ display:none !important; }
         <input id="nome_benef_auto" readonly placeholder="SERÁ PREENCHIDO AUTOMATICAMENTE" />
       </div>
       <div>
-        <label>RESPONSÁVEL RESOLVE (lista)</label>
+        <label>RESPONSÁVEL RESOLVE</label>
         <select id="resp_resolve">
           <option value="">(SELECIONAR)</option>
           <option value="AGNO NOLETO">AGNO NOLETO</option>
@@ -1768,6 +1768,387 @@ async function copiarJSON(){
       return;
     }
   }, false);
+})();
+</script>
+
+
+<script id="COMPROVANTE_ADESAO_MIRROR_TARGET_V31">
+/* V3.1 - recebe campos espelhados da Proposta Coletivo por Adesão. */
+(function(){
+  if(window.__comprovanteMirrorTargetV31) return;
+  window.__comprovanteMirrorTargetV31 = true;
+
+  function $(id){ return document.getElementById(id); }
+  function ensureStyle(){
+    if(document.getElementById('mirrorLockedStyleV31')) return;
+    const st = document.createElement('style');
+    st.id = 'mirrorLockedStyleV31';
+    st.textContent = '.mirror-locked-v31{background:#f3f4f6!important;color:#374151!important;cursor:not-allowed!important;} .mirror-locked-v31:disabled{opacity:1!important;} .mirror-free-v31{cursor:auto!important;}';
+    document.head.appendChild(st);
+  }
+  function onlyDigits(v){ return String(v || '').replace(/\D+/g, ''); }
+  function normalize(v){ return String(v || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().replace(/\s+/g, ' ').trim(); }
+  const PLAN_MAP = {
+    'ATENDEMED TOP': 'ATENDMED TOP (AMB + HOSP C/ OBSTETRÍCIA)',
+    'ATENDEMED PLENO II': 'ATENDMED PLENO II (AMB + HOSP C/ OBSTETRÍCIA)',
+    'PRATA COLETIVO POR ADESAO': 'PRATA COLETIVO POR ADESÃO (AMB + HOSP C/ OBSTETRÍCIA)',
+    'DIAMANTE COLETIVO POR ADESAO': 'DIAMANTE COLETIVO POR ADESÃO (AMB + HOSP C/ OBSTETRÍCIA)',
+    'UNIMULTI EMPRESARIAL ESPECIAL': 'UNIMULTI EMPRES. ESPECIAL (AMB + HOSP C/ OBSTETRÍCIA)',
+    'UNIMULTI EMPRESARIAL BASICO': 'UNIMULTI EMPRES. BÁSICO (AMB + HOSP C/ OBSTETRÍCIA)',
+    'UNIMULTI EMPRESARIAL ESPECIAL COPART': 'UNIMULTI EMPRES. ESPEC. COPART (AMB + HOSP C/ OBSTETRÍCIA)',
+    'UNIMULTI EMPRESARIAL BASICO COPART': 'UNIMULTI EMPRES. BÁSICO COPART (AMB + HOSP C/ OBSTETRÍCIA)',
+    'UNIVIDA ESPECIAL': 'UNIVIDA ESPECIAL (AMB + HOSP C/ OBSTETRÍCIA)',
+    'UNIVIDA BASICO': 'UNIVIDA BÁSICO (AMB + HOSP C/ OBSTETRÍCIA)',
+    'UNIVIDA ESPECIAL COPART': 'UNIVIDA ESPECIAL COPART (AMB + HOSP C/ OBSTETRÍCIA)',
+    'UNIVIDA BASICO COPART': 'UNIVIDA BÁSICO COPART (AMB + HOSP C/ OBSTETRÍCIA)',
+    'UNIPE CO ADESAO': 'UNIPÊ CO ADESÃO',
+    'UNIPE CO MAIS ADESAO': 'UNIPÊ CO MAIS ADESÃO'
+  };
+  const CONTRACT_MAP = {
+    '1673':'ACIP INTERMED', '1599':'ASSIFPI INTERMED', '1609':'SINTUFPI INTERMED', '590':'SISMUJOF',
+    '5361':'ACIP', '4677':'ADCESP', '4691':'ASSIFPI', '5446':'CAU', '5621':'CDL', '5580':'CRECI',
+    '4709':'CRF', '5562':'CRMV', '4572':'FESPPI', '5392':'SENATEPI', '4599':'SINDEPOL', '5841':'SINPRO',
+    '4903':'SINSEP', '4970':'SINTEPI', '4690':'SINTUFPI'
+  };
+  const CONTRACT_DEP_V31 = {
+    'ACIP INTERMED':['11','NOVEMBRO'], 'ASSIFPI INTERMED':['11','MARÇO'], 'SINTUFPI INTERMED':['11','ABRIL'], 'SISMUJOF':['11','ABRIL'],
+    'ACIP':['7','FEVEREIRO'], 'ADCESP':['20','JANEIRO'], 'ASSIFPI':['5','OUTUBRO'], 'CAU':['5','ABRIL'], 'CDL':['7','AGOSTO'],
+    'CRECI':['10','JULHO'], 'CRF':['5','JULHO'], 'CRMV':['9','JULHO'], 'FESPPI':['10','OUTUBRO'], 'SENATEPI':['9','MARÇO'],
+    'SINDEPOL':['19','JANEIRO'], 'SINPRO':['6','JANEIRO'], 'SINSEP':['5','JULHO'], 'SINTEPI':['5','OUTUBRO'], 'SINTUFPI':['5','SETEMBRO']
+  };
+  function buildReajTextV31(month){
+    const m = String(month || '').trim();
+    return m ? (m + ' (PODE ACONTECER ATÉ 60 DIAS APÓS O ANIVERSÁRIO DO CONTRATO*)') : '';
+  }
+  function lockInput(id, lock=true){
+    const el = $(id);
+    if(!el) return;
+    el.readOnly = !!lock;
+    el.tabIndex = lock ? -1 : 0;
+    el.classList.toggle('mirror-locked-v31', !!lock);
+    if(lock) el.title = 'Campo espelhado da PROPOSTA COLETIVO POR ADESÃO. Para alterar, edite na Proposta.';
+    else el.title = '';
+  }
+  function lockSelect(id, lock=true){
+    const el = $(id);
+    if(!el) return;
+    el.disabled = !!lock;
+    el.tabIndex = lock ? -1 : 0;
+    el.classList.toggle('mirror-locked-v31', !!lock);
+    if(lock) el.title = 'Campo espelhado da PROPOSTA COLETIVO POR ADESÃO. Para alterar, edite na Proposta.';
+    else el.title = '';
+  }
+  function lockRadio(id, lock=true){
+    const el = $(id);
+    if(!el) return;
+    el.disabled = !!lock;
+    el.tabIndex = lock ? -1 : 0;
+    const card = el.closest('.optcard');
+    if(card) card.classList.toggle('mirror-locked-v31', !!lock);
+    if(lock) el.title = 'Campo espelhado da PROPOSTA COLETIVO POR ADESÃO. Para alterar, edite na Proposta.';
+    else el.title = '';
+  }
+  function unlockExceptions(programada){
+    lockSelect('prestadora', false);
+    lockSelect('desist_mes', false);
+    lockInput('port_data', false);
+    const data = $('ativ_data');
+    if(data){
+      data.disabled = !programada;
+      data.readOnly = !programada;
+      data.tabIndex = programada ? 0 : -1;
+      data.classList.toggle('mirror-locked-v31', !programada);
+      data.title = programada ? '' : 'A data só libera quando a movimentação programada for escolhida na Proposta.';
+    }
+  }
+  function lockMirroredFields(programada){
+    ensureStyle();
+    lockInput('nome_benef', true);
+    lockSelect('plano_contrato', true);
+    lockRadio('ativ_prog', true);
+    lockRadio('ativ_imed', true);
+    lockInput('valor_mensal', true);
+    lockSelect('contrato', true);
+    lockInput('venc_dia', true);
+    lockInput('reaj_mes', true);
+    lockInput('nome_benef_auto', true);
+    lockSelect('resp_resolve', true);
+    unlockExceptions(!!programada);
+  }
+  function setInput(id, value){
+    const el = $(id);
+    if(!el) return;
+    const next = String(value || '');
+    if(el.value !== next) el.value = next;
+  }
+  function ensureSelectOption(sel, value){
+    if(!sel || !value) return;
+    const found = Array.from(sel.options || []).some(o => o.value === value);
+    if(!found){
+      const o = document.createElement('option');
+      o.value = value;
+      o.textContent = value;
+      sel.appendChild(o);
+    }
+  }
+  function setSelect(id, value){
+    const sel = $(id);
+    if(!sel) return;
+    const next = String(value || '');
+    ensureSelectOption(sel, next);
+    if(sel.value !== next) sel.value = next;
+  }
+  function resolvePlan(data){
+    const raw = data.nomePlano || data.nomePlanoTexto || '';
+    const key = normalize(raw);
+    const mapped = PLAN_MAP[key] || raw;
+    const sel = $('plano_contrato');
+    if(sel && mapped){
+      const exact = Array.from(sel.options || []).find(o => o.value === mapped);
+      if(exact) return exact.value;
+      const byNorm = Array.from(sel.options || []).find(o => normalize(o.value) === normalize(mapped) || normalize(o.textContent) === normalize(mapped));
+      if(byNorm) return byNorm.value;
+    }
+    return mapped || '';
+  }
+  function resolveContract(data){
+    const txt = data.contratoTexto || '';
+    const num = onlyDigits(data.contratoValor || '');
+    if(num && CONTRACT_MAP[num]) return CONTRACT_MAP[num];
+    if(txt) return txt;
+    return '';
+  }
+  function dispatchChange(id){
+    const el = $(id);
+    if(!el) return;
+    try{ el.dispatchEvent(new Event('change', {bubbles:true})); }catch(e){}
+  }
+  function applyContratoDependentes(){
+    dispatchChange('contrato');
+    const c = $('contrato') ? $('contrato').value : '';
+    const dep = CONTRACT_DEP_V31[c];
+    if(dep){
+      if($('venc_dia')) $('venc_dia').value = dep[0] || '';
+      if($('reaj_mes')) $('reaj_mes').value = buildReajTextV31(dep[1] || '');
+    }else{
+      if($('venc_dia')) $('venc_dia').value = '';
+      if($('reaj_mes')) $('reaj_mes').value = '';
+    }
+  }
+  function setMovement(tipo){
+    const prog = $('ativ_prog');
+    const imed = $('ativ_imed');
+    if(prog) prog.checked = tipo === 'PROGRAMADA';
+    if(imed) imed.checked = tipo === 'IMEDIATA';
+    if(tipo !== 'PROGRAMADA') setInput('ativ_data', '');
+    try{ if(typeof updateAtivUI === 'function') updateAtivUI(); }catch(e){}
+  }
+  function applyMirror(data){
+    data = data || {};
+    const tipo = data.movimentacaoTipo || '';
+    const programada = tipo === 'PROGRAMADA';
+
+    setInput('nome_benef', data.nomeTitular || '');
+    setInput('valor_mensal', data.valorPlano || '');
+    setSelect('resp_resolve', data.vendedor || '');
+    setSelect('plano_contrato', resolvePlan(data));
+    setSelect('contrato', resolveContract(data));
+    setMovement(tipo);
+    applyContratoDependentes();
+    lockMirroredFields(programada);
+    if(!programada) setInput('ativ_data', '');
+
+    try{ if(typeof syncOutputs === 'function') syncOutputs(); }catch(e){}
+    try{ if(typeof validate === 'function') validate(false); }catch(e){}
+  }
+  window.addEventListener('message', function(ev){
+    const msg = ev.data;
+    if(!msg || typeof msg !== 'object' || msg.__mirrorV31 !== true) return;
+    if(msg.type === 'APPLY_PROPOSTA_MIRROR_V31') applyMirror(msg.data || {});
+  }, false);
+  function ready(){
+    lockMirroredFields(false);
+    try{ window.parent && window.parent.postMessage({__mirrorV31:true, type:'MIRROR_TARGET_READY_V31', docId:'comprov'}, '*'); }catch(e){}
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ready);
+  else ready();
+})();
+</script>
+
+
+<script id="COMPROVANTE_ADESAO_MICRO_AJUSTE_V32">
+/* V3.2/V3.3 - campos espelhados como texto; V3.3 restaura neon da PRESTADORA manual. */
+(function(){
+  if(window.__comprovanteMicroAjusteV32) return;
+  window.__comprovanteMicroAjusteV32 = true;
+
+  function $(id){ return document.getElementById(id); }
+  function onlyDigits(v){ return String(v || '').replace(/\D+/g, ''); }
+  function okDate(d){
+    d = String(d || '').trim();
+    if(d.length !== 10) return false;
+    const parts = d.split('/');
+    if(parts.length !== 3) return false;
+    const di = parseInt(parts[0], 10), mi = parseInt(parts[1], 10), yi = parseInt(parts[2], 10);
+    return di >= 1 && di <= 31 && mi >= 1 && mi <= 12 && yi >= 1900 && yi <= 2100;
+  }
+  function isMoneyFilled(v){
+    const d = onlyDigits(v);
+    if(!d) return false;
+    return parseInt(d, 10) > 0;
+  }
+  function setGlowLocal(el, cls){
+    if(!el) return;
+    el.classList.remove('glow-focus', 'glow-error', 'glow-ok');
+    if(cls) el.classList.add(cls);
+  }
+  function clearGlow(el){ setGlowLocal(el, null); }
+
+  const SELECT_TEXT_FIELDS = [
+    { id:'plano_contrato', placeholder:'Preenchido automaticamente pelo Nome do plano da Proposta' },
+    { id:'contrato', placeholder:'Preenchido automaticamente pelo Contrato da Proposta' },
+    { id:'resp_resolve', placeholder:'Preenchido automaticamente pelo Vendedor da Proposta' }
+  ];
+  const FIELDS_WITHOUT_NEON = [
+    'nome_benef', 'plano_contrato', 'valor_mensal', 'contrato',
+    'venc_dia', 'reaj_mes', 'nome_benef_auto', 'resp_resolve'
+  ];
+
+  function ensureStyle(){
+    if($('microAjusteV32Style')) return;
+    const st = document.createElement('style');
+    st.id = 'microAjusteV32Style';
+    st.textContent = `
+      .mirror-select-internal-v32{display:none!important;}
+      .mirror-display-v32{
+        width:100%; box-sizing:border-box; padding:10px 12px;
+        border:1px solid #d1d5db; border-radius:10px; font-size:14px; outline:none;
+        background:#f3f4f6!important; color:#1f2937!important;
+        cursor:not-allowed!important; opacity:1!important;
+      }
+      .mirror-display-v32::placeholder{color:#9ca3af;}
+    `;
+    document.head.appendChild(st);
+  }
+
+  function getSelectedText(sel){
+    if(!sel || !sel.value) return '';
+    const opt = sel.options && sel.selectedIndex >= 0 ? sel.options[sel.selectedIndex] : null;
+    return (opt && (opt.textContent || opt.value)) ? String(opt.textContent || opt.value).trim() : String(sel.value || '').trim();
+  }
+
+  function ensureDisplayForSelect(id, placeholder){
+    const sel = $(id);
+    if(!sel) return null;
+    ensureStyle();
+    sel.classList.add('mirror-select-internal-v32');
+    sel.setAttribute('aria-hidden', 'true');
+    let display = $(id + '_display_v32');
+    if(!display){
+      display = document.createElement('input');
+      display.type = 'text';
+      display.id = id + '_display_v32';
+      display.className = 'mirror-display-v32';
+      display.readOnly = true;
+      display.tabIndex = -1;
+      display.placeholder = placeholder || 'Preenchido automaticamente pela Proposta';
+      display.title = 'Campo espelhado da PROPOSTA COLETIVO POR ADESÃO. Para alterar, edite na Proposta.';
+      sel.insertAdjacentElement('afterend', display);
+    }
+    display.value = getSelectedText(sel);
+    clearGlow(display);
+    return display;
+  }
+
+  function updateTextDisplays(){
+    SELECT_TEXT_FIELDS.forEach(cfg => ensureDisplayForSelect(cfg.id, cfg.placeholder));
+  }
+
+  function clearNonManualNeons(){
+    FIELDS_WITHOUT_NEON.forEach(id => clearGlow($(id)));
+    SELECT_TEXT_FIELDS.forEach(cfg => clearGlow($(cfg.id + '_display_v32')));
+    document.querySelectorAll('.ativ-wrap .optcard').forEach(clearGlow);
+  }
+
+  function applyManualNeonsOnly(){
+    updateTextDisplays();
+    clearNonManualNeons();
+
+    const prestEl = $('prestadora');
+    if(prestEl){
+      const focused = document.activeElement === prestEl;
+      const filled = !!prestEl.value;
+      if(focused) setGlowLocal(prestEl, 'glow-focus');
+      else setGlowLocal(prestEl, filled ? 'glow-ok' : 'glow-error');
+    }
+
+    const tipo = (typeof window.getAtivTipo === 'function') ? window.getAtivTipo() : '';
+    const ativEl = $('ativ_data');
+    if(ativEl){
+      if(tipo === 'PROGRAMADA'){
+        const focused = document.activeElement === ativEl;
+        if(focused) setGlowLocal(ativEl, 'glow-focus');
+        else setGlowLocal(ativEl, okDate(ativEl.value) ? 'glow-ok' : 'glow-error');
+      }else{
+        clearGlow(ativEl);
+      }
+    }
+
+    const desistEl = $('desist_mes');
+    if(desistEl){
+      const focused = document.activeElement === desistEl;
+      const filled = !!desistEl.value;
+      if(focused) setGlowLocal(desistEl, 'glow-focus');
+      else if(filled) setGlowLocal(desistEl, 'glow-ok');
+      else clearGlow(desistEl);
+    }
+
+    const portEl = $('port_data');
+    if(portEl){
+      const focused = document.activeElement === portEl;
+      const valid = okDate(portEl.value);
+      if(focused) setGlowLocal(portEl, 'glow-focus');
+      else if(valid) setGlowLocal(portEl, 'glow-ok');
+      else clearGlow(portEl);
+    }
+  }
+
+  const originalSyncOutputs = window.syncOutputs;
+  if(typeof originalSyncOutputs === 'function'){
+    window.syncOutputs = function(){
+      const result = originalSyncOutputs.apply(this, arguments);
+      applyManualNeonsOnly();
+      return result;
+    };
+  }
+
+  window.updateRequiredNeon = function(){
+    const tipo = (typeof window.getAtivTipo === 'function') ? window.getAtivTipo() : '';
+    const reqOk = [
+      !!($('nome_benef') && $('nome_benef').value.trim()),
+      !!($('prestadora') && $('prestadora').value),
+      !!($('plano_contrato') && $('plano_contrato').value),
+      isMoneyFilled($('valor_mensal') ? $('valor_mensal').value : ''),
+      !!($('contrato') && $('contrato').value),
+      !!($('resp_resolve') && $('resp_resolve').value)
+    ];
+    const ativOk = tipo === 'PROGRAMADA' ? okDate($('ativ_data') ? $('ativ_data').value : '') : true;
+    const allOk = reqOk.every(Boolean) && !!tipo && ativOk;
+    applyManualNeonsOnly();
+    const btn = $('btn_print');
+    if(btn) btn.disabled = !allOk;
+    return allOk;
+  };
+
+  function ready(){
+    updateTextDisplays();
+    applyManualNeonsOnly();
+    try{ if(typeof window.validate === 'function') window.validate(false); }
+    catch(e){ try{ window.updateRequiredNeon(); }catch(_e){} }
+  }
+
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ready);
+  else ready();
 })();
 </script>
 

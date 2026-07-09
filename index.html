@@ -106,7 +106,7 @@
     <div class="brand">
       <div>
         <div class="title">R-Proposta Digital</div>
-        <div class="sub">v2.9 • Preenchimento de proposta</div>
+        <div class="sub">v3.3 • Visualizar e baixar proposta</div>
       </div>
       <div class="pill" title="Persistência local">localStorage</div>
     </div>
@@ -222,6 +222,13 @@
 
       const iframe = document.createElement('iframe');
       iframe.src = doc.file + '#inst=' + i + '&ts=' + Date.now();
+      iframe.addEventListener('load', () => {
+        try{
+          setTimeout(() => {
+            if(typeof window.__propostaMirrorV31Sync === 'function') window.__propostaMirrorV31Sync();
+          }, 120);
+        }catch(e){}
+      });
       wrap.appendChild(iframe);
 
       frames[docId].push(wrap);
@@ -356,6 +363,68 @@
     setActiveWrap(docId, state.activeInstIndex[docId]);
   }
 
+
+  // V3.3 - espelhamento em tempo real da PROPOSTA COLETIVO POR ADESÃO
+  // Fonte: proposta. Destinos: termo de consentimento e comprovante de adesão.
+  const propostaMirrorV31 = {
+    data: null,
+    lastAt: 0
+  };
+
+  function postMirrorToDocV31(docId){
+    try{
+      if(!propostaMirrorV31.data) return;
+      const wraps = frames[docId] || [];
+      wraps.forEach(w => {
+        const iframe = w && w.querySelector ? w.querySelector('iframe') : null;
+        if(iframe && iframe.contentWindow){
+          iframe.contentWindow.postMessage({
+            __mirrorV31: true,
+            type: 'APPLY_PROPOSTA_MIRROR_V31',
+            data: propostaMirrorV31.data
+          }, '*');
+        }
+      });
+    }catch(e){}
+  }
+
+  function requestPropostaMirrorV31(){
+    try{
+      const wraps = frames.proposta || [];
+      wraps.forEach(w => {
+        const iframe = w && w.querySelector ? w.querySelector('iframe') : null;
+        if(iframe && iframe.contentWindow){
+          iframe.contentWindow.postMessage({__mirrorV31:true, type:'REQUEST_PROPOSTA_MIRROR_V31'}, '*');
+        }
+      });
+    }catch(e){}
+  }
+
+  function syncPropostaMirrorV31(){
+    requestPropostaMirrorV31();
+    postMirrorToDocV31('consent');
+    postMirrorToDocV31('comprov');
+  }
+  window.__propostaMirrorV31Sync = syncPropostaMirrorV31;
+
+  window.addEventListener('message', function(ev){
+    const msg = ev.data;
+    if(!msg || typeof msg !== 'object' || msg.__mirrorV31 !== true) return;
+
+    if(msg.type === 'PROPOSTA_MIRROR_UPDATE_V31'){
+      propostaMirrorV31.data = msg.data || {};
+      propostaMirrorV31.lastAt = Date.now();
+      postMirrorToDocV31('consent');
+      postMirrorToDocV31('comprov');
+      return;
+    }
+
+    if(msg.type === 'PROPOSTA_MIRROR_SOURCE_READY_V31' || msg.type === 'MIRROR_TARGET_READY_V31'){
+      setTimeout(syncPropostaMirrorV31, 80);
+      return;
+    }
+  }, false);
+
   
   // ANEXOS (PDF / IMAGEM) — fluxo atual usado pelo gerador PDF final limpo.
   // Mantém somente seleção/listagem em memória. O anexamento real é feito no motor PDFLib ativo.
@@ -464,6 +533,9 @@
   // O botão GERAR PDF é assumido pelo motor PDFLib ativo.
   DOCS.forEach(d => ensureFrames(d.id));
   activateDoc(state.activeDocId, state.activeInstIndex[state.activeDocId]);
+  setTimeout(() => {
+    if(typeof window.__propostaMirrorV31Sync === 'function') window.__propostaMirrorV31Sync();
+  }, 500);
 })();
 </script>
 
@@ -1473,7 +1545,7 @@
     await appendAttachments(outDoc);
 
 	outDoc.setTitle((pdfFileName || getPdfFileName()).replace(/\.pdf$/i,''));
-	outDoc.setProducer('R-Proposta Digital v2.9 - PDF final limpo');
+	outDoc.setProducer('R-Proposta Digital v3.3 - PDF final limpo');
 	return await outDoc.save({useObjectStreams:true, addDefaultPage:false, updateFieldAppearances:false});
   }
 

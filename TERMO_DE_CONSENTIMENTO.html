@@ -1266,5 +1266,108 @@ document.addEventListener("DOMContentLoaded", function(){
 })();
 </script>
 
+
+<script id="TERMO_CONSENTIMENTO_MIRROR_TARGET_V31">
+/* V3.1 - recebe E-mail, DDD e Telefone da Proposta Coletivo por Adesão. */
+(function(){
+  if(window.__termoConsentMirrorTargetV31) return;
+  window.__termoConsentMirrorTargetV31 = true;
+
+  function $(id){ return document.getElementById(id); }
+  function ensureStyle(){
+    if(document.getElementById('mirrorLockedStyleV31')) return;
+    const st = document.createElement('style');
+    st.id = 'mirrorLockedStyleV31';
+    st.textContent = '.mirror-locked-v31{background:#f3f4f6!important;color:#374151!important;cursor:not-allowed!important;} .mirror-note-v31{font-size:12px;color:#6b7280;margin-top:6px;}';
+    document.head.appendChild(st);
+  }
+  function lockField(id){
+    const el = $(id);
+    if(!el) return;
+    el.readOnly = true;
+    el.tabIndex = -1;
+    el.classList.add('mirror-locked-v31');
+    el.title = 'Campo espelhado da PROPOSTA COLETIVO POR ADESÃO. Para alterar, edite na Proposta.';
+  }
+  function lockAll(){
+    ensureStyle();
+    ['email','ddd','telefone'].forEach(lockField);
+  }
+  function setValue(id, value){
+    const el = $(id);
+    if(!el) return;
+    const next = String(value || '');
+    if(el.value !== next) el.value = next;
+  }
+  function applyMirror(data){
+    data = data || {};
+    lockAll();
+    setValue('email', data.emailTitular || '');
+    setValue('ddd', data.telefoneDDD || '');
+    setValue('telefone', data.telefoneNumero || '');
+    try{ if(typeof refreshOutputs === 'function') refreshOutputs(); }catch(e){}
+    try{ if(typeof hideEmailSuggest === 'function') hideEmailSuggest(true); }catch(e){}
+  }
+  window.addEventListener('message', function(ev){
+    const msg = ev.data;
+    if(!msg || typeof msg !== 'object' || msg.__mirrorV31 !== true) return;
+    if(msg.type === 'APPLY_PROPOSTA_MIRROR_V31') applyMirror(msg.data || {});
+  }, false);
+  function ready(){
+    lockAll();
+    try{ window.parent && window.parent.postMessage({__mirrorV31:true, type:'MIRROR_TARGET_READY_V31', docId:'consent'}, '*'); }catch(e){}
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ready);
+  else ready();
+})();
+</script>
+
+
+<script id="TERMO_CONSENTIMENTO_MICRO_AJUSTE_V32">
+/* V3.2 - remove neon do Termo de Consentimento: campos são espelhados e bloqueados. */
+(function(){
+  if(window.__termoConsentMicroAjusteV32) return;
+  window.__termoConsentMicroAjusteV32 = true;
+
+  function $(id){ return document.getElementById(id); }
+  function ensureStyle(){
+    if($('termoMicroAjusteV32Style')) return;
+    const st = document.createElement('style');
+    st.id = 'termoMicroAjusteV32Style';
+    st.textContent = '#email.neon-red,#email.neon-green,#ddd.neon-red,#ddd.neon-green,#telefone.neon-red,#telefone.neon-green{border-color:#d1d5db!important;box-shadow:none!important;}';
+    document.head.appendChild(st);
+  }
+  function clearNeon(){
+    ['email','ddd','telefone'].forEach(id => {
+      const el = $(id);
+      if(el) el.classList.remove('neon-red','neon-green');
+    });
+  }
+
+  window.setNeon = function(inputEl){
+    if(inputEl) inputEl.classList.remove('neon-red','neon-green');
+  };
+
+  const originalRefreshOutputs = window.refreshOutputs;
+  if(typeof originalRefreshOutputs === 'function'){
+    window.refreshOutputs = function(){
+      const result = originalRefreshOutputs.apply(this, arguments);
+      clearNeon();
+      return result;
+    };
+  }
+
+  function ready(){
+    ensureStyle();
+    clearNeon();
+    try{ if(typeof window.refreshOutputs === 'function') window.refreshOutputs(); }catch(e){}
+    clearNeon();
+  }
+
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ready);
+  else ready();
+})();
+</script>
+
 </body>
 </html>

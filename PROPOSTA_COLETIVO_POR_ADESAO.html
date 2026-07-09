@@ -1314,5 +1314,105 @@ document.addEventListener('DOMContentLoaded',()=>{applyPosAll();attachMoneyMask(
 })();
 </script>
 
+
+<script id="PROPOSTA_MIRROR_SOURCE_V31">
+/* V3.1 - fonte oficial dos campos espelhados para Termo de Consentimento e Comprovante de Adesão. */
+(function(){
+  if(window.__propostaMirrorSourceV31) return;
+  window.__propostaMirrorSourceV31 = true;
+
+  function $(id){ return document.getElementById(id); }
+  function val(id){ const el=$(id); return el ? String(el.value || '').trim() : ''; }
+  function onlyDigits(v){ return String(v || '').replace(/\D+/g, ''); }
+  function selectText(id){
+    const el = $(id);
+    if(!el || !String(el.value || '').trim()) return '';
+    const opt = el.selectedOptions && el.selectedOptions[0];
+    return opt ? String(opt.textContent || '').trim() : '';
+  }
+  function moneyFromCents(id){
+    const el = $(id);
+    if(!el) return '';
+    let cents = parseInt((el.dataset && el.dataset.cents) ? el.dataset.cents : '0', 10) || 0;
+    if(!cents){
+      const digs = onlyDigits(el.value);
+      cents = digs ? parseInt(digs, 10) : 0;
+    }
+    if(!cents) return '';
+    return (cents/100).toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
+  }
+  function telParts(raw){
+    const d = onlyDigits(raw).slice(0, 11);
+    const ddd = d.slice(0, 2);
+    const numDigits = d.slice(2, 11);
+    let num = numDigits;
+    if(numDigits.length > 5) num = numDigits.slice(0,5) + '-' + numDigits.slice(5,9);
+    return { ddd, numero: num, digits: d };
+  }
+  function movementKind(mov){
+    if(/^prog_/.test(mov || '')) return 'PROGRAMADA';
+    if(/^imm_/.test(mov || '')) return 'IMEDIATA';
+    return '';
+  }
+  function readMirrorData(){
+    const telefone = telParts(val('fone'));
+    const mov = (document.querySelector('input[name="mov"]:checked') || {}).value || '';
+    return {
+      emailTitular: val('email_titular'),
+      telefoneRaw: val('fone'),
+      telefoneDDD: telefone.ddd,
+      telefoneNumero: telefone.numero,
+      telefoneDigits: telefone.digits,
+      vendedor: val('vendedor'),
+      valorPlano: moneyFromCents('valor_plano'),
+      nomePlano: val('nome_plano'),
+      nomePlanoTexto: selectText('nome_plano'),
+      contratoValor: val('contrato_nome') || val('contrato'),
+      contratoTexto: selectText('contrato_nome'),
+      movimentacao: mov,
+      movimentacaoTipo: movementKind(mov),
+      nomeTitular: val('nome_titular')
+    };
+  }
+  function notifyMirror(){
+    try{
+      window.parent && window.parent.postMessage({
+        __mirrorV31: true,
+        type: 'PROPOSTA_MIRROR_UPDATE_V31',
+        data: readMirrorData()
+      }, '*');
+    }catch(e){}
+  }
+  function bindMirror(){
+    const ids = ['email_titular','fone','vendedor','valor_plano','nome_plano','contrato_nome','contrato','nome_titular'];
+    ids.forEach(id => {
+      const el = $(id);
+      if(!el || el.dataset.mirrorV31Bound === '1') return;
+      el.dataset.mirrorV31Bound = '1';
+      ['input','change','blur'].forEach(evt => el.addEventListener(evt, () => setTimeout(notifyMirror, 0)));
+    });
+    document.querySelectorAll('input[name="mov"]').forEach(el => {
+      if(el.dataset.mirrorV31Bound === '1') return;
+      el.dataset.mirrorV31Bound = '1';
+      el.addEventListener('change', () => setTimeout(notifyMirror, 0));
+      el.addEventListener('click', () => setTimeout(notifyMirror, 0));
+    });
+    setTimeout(notifyMirror, 50);
+    setTimeout(notifyMirror, 400);
+  }
+
+  window.addEventListener('message', function(ev){
+    const msg = ev.data;
+    if(!msg || typeof msg !== 'object' || msg.__mirrorV31 !== true) return;
+    if(msg.type === 'REQUEST_PROPOSTA_MIRROR_V31') notifyMirror();
+  }, false);
+
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bindMirror);
+  else bindMirror();
+
+  try{ window.parent && window.parent.postMessage({__mirrorV31:true, type:'PROPOSTA_MIRROR_SOURCE_READY_V31'}, '*'); }catch(e){}
+})();
+</script>
+
 </body>
 </html>
