@@ -2,8 +2,8 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>R-Proposta Digital</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<title>R-Proposta Digital — v3.1 MOBILE</title>
 <style>
   :root{--bg:#0b1220;--panel:#111827;--card:#0f172a;--border:rgba(255,255,255,.10);--ink:#e5e7eb;--muted:#9ca3af;--accent:#ff7a00;}
   *{box-sizing:border-box;}
@@ -96,17 +96,118 @@
   .attachRm:hover{background:rgba(255,255,255,.10);}
   .attachNote{margin-top:8px;font-size:12px;color:var(--muted);line-height:1.35;}
 
+
+
+/* ===== v3.1 MOBILE: navegação responsiva e segura para toque ===== */
+.mobileTopbar,.mobileBottomBar,.mobileBackdrop{display:none;}
+.mobileTopbar button,.mobileBottomBar button{-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
+
+@media screen and (max-width: 960px){
+  :root{--mobile-top:60px;--mobile-bottom:72px;}
+  html,body{width:100%;height:100%;overflow:hidden;overscroll-behavior:none;}
+  body{min-height:100dvh;background:#0b1220;}
+  .app{display:block;height:100dvh;min-height:0;overflow:hidden;}
+
+  .mobileTopbar{
+    position:fixed;inset:0 0 auto 0;height:var(--mobile-top);z-index:10020;
+    display:flex;align-items:center;gap:10px;padding:8px max(10px,env(safe-area-inset-right)) 8px max(10px,env(safe-area-inset-left));
+    background:rgba(11,18,32,.98);border-bottom:1px solid var(--border);box-shadow:0 5px 18px rgba(0,0,0,.28);
+  }
+  .mobileMenuToggle{
+    flex:0 0 44px;width:44px;height:44px;border:1px solid rgba(255,255,255,.16);border-radius:12px;
+    background:rgba(255,255,255,.07);color:#fff;font-size:24px;font-weight:900;cursor:pointer;
+  }
+  .mobileHeading{min-width:0;display:flex;flex-direction:column;gap:2px;}
+  .mobileHeading strong{font-size:14px;line-height:1.1;white-space:nowrap;}
+  .mobileHeading span{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:calc(100vw - 78px);}
+
+  .mobileBackdrop{
+    display:block;position:fixed;inset:0;z-index:10025;background:rgba(0,0,0,.62);
+    opacity:0;visibility:hidden;transition:opacity .2s ease,visibility .2s ease;
+  }
+  body.mobile-menu-open .mobileBackdrop{opacity:1;visibility:visible;}
+
+  .sidebar{
+    position:fixed;z-index:10030;left:0;top:0;bottom:0;width:min(88vw,350px);max-width:none;height:100dvh;
+    padding:calc(12px + env(safe-area-inset-top)) 12px calc(18px + env(safe-area-inset-bottom));
+    border-right:1px solid rgba(255,255,255,.14);box-shadow:18px 0 40px rgba(0,0,0,.45);
+    transform:translate3d(-105%,0,0);transition:transform .22s ease;overflow-y:auto;overscroll-behavior:contain;
+  }
+  body.mobile-menu-open .sidebar{transform:translate3d(0,0,0);}
+  .brand{padding:12px;margin-bottom:10px;}
+  .brand .title{font-size:16px;}
+  .brand .sub{font-size:11px;}
+  .menu{gap:8px;margin-top:8px;}
+  .item{padding:12px;min-height:64px;display:flex;flex-direction:column;justify-content:center;touch-action:manipulation;}
+  .item:hover{transform:none;}
+  .item .k{font-size:13px;line-height:1.2;}
+  .item .d{font-size:11px;}
+  .sidebar>.masterbtn{display:none;}
+  .attachBox{margin-top:12px;}
+  .attachBtn{min-height:46px;font-size:13px;}
+  .attachActions .prepBtn{height:46px;}
+
+  .content{
+    width:100%;height:100dvh;min-height:0;padding:var(--mobile-top) 0 calc(var(--mobile-bottom) + env(safe-area-inset-bottom));
+    display:flex;flex-direction:column;overflow:hidden;
+  }
+  .topbar{display:none;}
+  .instbar{
+    flex:0 0 auto;margin:0;padding:8px 10px;border:0;border-bottom:1px solid var(--border);border-radius:0;
+    flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none;background:#111827;
+  }
+  .instbar::-webkit-scrollbar{display:none;}
+  .instbtn{flex:0 0 auto;min-height:42px;padding:9px 12px;font-size:12px;touch-action:manipulation;}
+  .stage{flex:1;min-height:0;height:auto;margin:0;border:0;border-radius:0;background:#f3f4f6;overflow:hidden;}
+  .framewrap,.framewrap.active{width:100%;height:100%;min-height:0;}
+  iframe{display:block;width:100%;height:100%;min-height:0;background:#f3f4f6;}
+
+  .mobileBottomBar{
+    position:fixed;z-index:10015;left:0;right:0;bottom:0;min-height:var(--mobile-bottom);
+    display:grid;grid-template-columns:72px minmax(0,1fr) minmax(0,1fr);gap:8px;
+    padding:8px max(8px,env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left));
+    background:rgba(11,18,32,.98);border-top:1px solid var(--border);box-shadow:0 -6px 20px rgba(0,0,0,.28);
+  }
+  .mobileBottomBar button{
+    min-width:0;min-height:52px;border-radius:12px;border:1px solid rgba(255,255,255,.15);padding:7px 6px;
+    color:#fff;background:rgba(255,255,255,.07);font-size:11px;font-weight:900;line-height:1.1;cursor:pointer;
+  }
+  .mobileBottomBar .mobileDocsBtn{font-size:21px;}
+  .mobileBottomBar .mobileViewBtn{background:rgba(255,122,0,.16);border-color:rgba(255,122,0,.45);color:#ffd4ae;}
+  .mobileBottomBar .mobileDownloadBtn{background:#ff7a00;border-color:#ff7a00;color:#111827;}
+  .mobileBottomBar button:disabled{opacity:.55;cursor:not-allowed;}
+
+  .modalOverlay{padding:10px;align-items:flex-end;}
+  .modal{width:100%;max-height:88dvh;border-radius:18px 18px 10px 10px;padding:14px;}
+  .modal .actions{position:sticky;bottom:0;padding-top:10px;background:rgba(17,24,39,.98);}
+  .modal .closeBtn{width:100%;min-height:48px;}
+}
+
+@media (min-width:961px) and (max-width:1100px){
+  .sidebar{width:285px;max-width:285px;}
+  .content{padding:10px;}
+}
+
 </style>
 <!-- Geração do PDF final no navegador -->
 <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
 </head>
 <body>
+
+<div class="mobileTopbar" aria-label="Barra móvel">
+  <button id="mobileMenuToggle" class="mobileMenuToggle" type="button" aria-label="Abrir documentos" aria-expanded="false">☰</button>
+  <div class="mobileHeading">
+    <strong>R-Proposta Digital</strong>
+    <span id="mobileDocTitle">Carregando documento…</span>
+  </div>
+</div>
+<div id="mobileBackdrop" class="mobileBackdrop" aria-hidden="true"></div>
 <div class="app">
   <aside class="sidebar">
     <div class="brand">
       <div>
         <div class="title">R-Proposta Digital</div>
-        <div class="sub">v3.3 • Visualizar e baixar proposta</div>
+        <div class="sub">v3.1 MOBILE • PC, tablet e celular</div>
       </div>
       <div class="pill" title="Persistência local">localStorage</div>
     </div>
@@ -138,6 +239,13 @@
 
     <div class="stage" id="stage"></div>
   </main>
+</div>
+
+
+<div class="mobileBottomBar" aria-label="Ações da proposta">
+  <button id="mobileDocsBtn" class="mobileDocsBtn" type="button" aria-label="Abrir documentos">☰</button>
+  <button id="mobileViewBtn" class="mobileViewBtn" type="button">VER<br>PROPOSTA</button>
+  <button id="mobileDownloadBtn" class="mobileDownloadBtn" type="button">BAIXAR<br>PROPOSTA</button>
 </div>
 
 <div class="modalOverlay" id="modalOverlay" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
@@ -1545,7 +1653,7 @@
     await appendAttachments(outDoc);
 
 	outDoc.setTitle((pdfFileName || getPdfFileName()).replace(/\.pdf$/i,''));
-	outDoc.setProducer('R-Proposta Digital v3.3 - PDF final limpo');
+	outDoc.setProducer('R-Proposta Digital v3.1 MOBILE - PDF final limpo');
 	return await outDoc.save({useObjectStreams:true, addDefaultPage:false, updateFieldAppearances:false});
   }
 
@@ -1642,5 +1750,78 @@
 })();
 
 </script>
+
+<script>
+/* ===== v3.1 MOBILE: controlador da gaveta e dos atalhos ===== */
+(() => {
+  const mq = window.matchMedia('(max-width: 960px)');
+  const body = document.body;
+  const sidebar = document.querySelector('.sidebar');
+  const backdrop = document.getElementById('mobileBackdrop');
+  const menuToggle = document.getElementById('mobileMenuToggle');
+  const docsBtn = document.getElementById('mobileDocsBtn');
+  const viewBtn = document.getElementById('mobileViewBtn');
+  const downloadBtn = document.getElementById('mobileDownloadBtn');
+  const docTitle = document.getElementById('mobileDocTitle');
+  const crumb = document.getElementById('crumb');
+
+  function isMobile(){ return mq.matches; }
+  function setMenu(open){
+    if(!isMobile()) open = false;
+    body.classList.toggle('mobile-menu-open', !!open);
+    if(menuToggle) menuToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    if(backdrop) backdrop.setAttribute('aria-hidden', open ? 'false' : 'true');
+  }
+  function openMenu(){ setMenu(true); }
+  function closeMenu(){ setMenu(false); }
+  function syncTitle(){
+    if(!docTitle) return;
+    const txt = crumb && crumb.textContent ? crumb.textContent.trim() : '';
+    docTitle.textContent = txt && txt !== '—' ? txt : 'Selecione um documento';
+  }
+  function proxyClick(targetId, mobileButton){
+    const target = document.getElementById(targetId);
+    if(!target || target.disabled) return;
+    mobileButton.disabled = true;
+    try{ target.click(); }
+    finally{
+      const timer = setInterval(() => {
+        const current = document.getElementById(targetId);
+        const busy = !!(current && current.disabled);
+        mobileButton.disabled = busy;
+        if(!busy) clearInterval(timer);
+      }, 180);
+      setTimeout(() => { clearInterval(timer); mobileButton.disabled = false; }, 120000);
+    }
+  }
+
+  menuToggle && menuToggle.addEventListener('click', () => body.classList.contains('mobile-menu-open') ? closeMenu() : openMenu());
+  docsBtn && docsBtn.addEventListener('click', openMenu);
+  backdrop && backdrop.addEventListener('click', closeMenu);
+  viewBtn && viewBtn.addEventListener('click', () => proxyClick('viewUnifiedBtn', viewBtn));
+  downloadBtn && downloadBtn.addEventListener('click', () => proxyClick('downloadUnifiedBtn', downloadBtn));
+
+  const menu = document.getElementById('menu');
+  menu && menu.addEventListener('click', (ev) => {
+    if(isMobile() && ev.target.closest('.item')) setTimeout(closeMenu, 80);
+  });
+  document.addEventListener('keydown', (ev) => { if(ev.key === 'Escape') closeMenu(); });
+  mq.addEventListener ? mq.addEventListener('change', closeMenu) : mq.addListener(closeMenu);
+
+  if(crumb){
+    new MutationObserver(syncTitle).observe(crumb, {childList:true,subtree:true,characterData:true});
+  }
+  syncTitle();
+
+  // Corrige a altura em navegadores móveis quando a barra de endereço aparece/desaparece.
+  function syncViewport(){
+    document.documentElement.style.setProperty('--app-height', `${window.innerHeight}px`);
+  }
+  window.addEventListener('resize', syncViewport, {passive:true});
+  window.addEventListener('orientationchange', syncViewport, {passive:true});
+  syncViewport();
+})();
+</script>
+
 </body>
 </html>
