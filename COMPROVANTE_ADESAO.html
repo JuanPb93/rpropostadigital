@@ -611,7 +611,7 @@ button[onclick*="toggleCalib"]{ display:none !important; }
         </select>
       </div>
       <div>
-        <label>DATA PORTABILIDADE (DD/MM/AAAA) *</label>
+        <label>DATA PORTABILIDADE (DD/MM/AAAA) (opcional)</label>
         <input id="port_data" inputmode="numeric" placeholder="DD/MM/AAAA" maxlength="10" />
       </div>
     </div>
@@ -1913,7 +1913,6 @@ async function copiarJSON(){
     else el.title = '';
   }
   function unlockExceptions(programada){
-    lockSelect('prestadora', false);
     lockSelect('desist_mes', false);
     lockInput('port_data', false);
     const data = $('ativ_data');
@@ -1928,6 +1927,7 @@ async function copiarJSON(){
   function lockMirroredFields(programada){
     ensureStyle();
     lockInput('nome_benef', true);
+    lockSelect('prestadora', true);
     lockSelect('plano_contrato', true);
     lockRadio('ativ_prog', true);
     lockRadio('ativ_imed', true);
@@ -1975,6 +1975,18 @@ async function copiarJSON(){
     }
     return mapped || '';
   }
+  function resolvePrestadora(data){
+    const raw = data.nomePlano || data.nomePlanoTexto || '';
+    const key = normalize(raw);
+    if(!key) return '';
+    const planosIntermed = new Set([
+      'ATENDEMED PLENO II',
+      'ATENDEMED TOP',
+      'DIAMANTE COLETIVO POR ADESAO',
+      'PRATA COLETIVO POR ADESAO'
+    ]);
+    return planosIntermed.has(key) ? 'INTERMED' : 'UNIMED';
+  }
   function resolveContract(data){
     const txt = data.contratoTexto || '';
     const num = onlyDigits(data.contratoValor || '');
@@ -2015,6 +2027,7 @@ async function copiarJSON(){
     setInput('nome_benef', data.nomeTitular || '');
     setInput('valor_mensal', data.valorPlano || '');
     setSelect('resp_resolve', data.vendedor || '');
+    setSelect('prestadora', resolvePrestadora(data));
     setSelect('plano_contrato', resolvePlan(data));
     setSelect('contrato', resolveContract(data));
     setMovement(tipo);
@@ -2040,8 +2053,8 @@ async function copiarJSON(){
 </script>
 
 
-<script id="COMPROVANTE_ADESAO_MICRO_AJUSTE_V32">
-/* V3.2/V3.3 - campos espelhados como texto; V3.3 restaura neon da PRESTADORA manual. */
+<script id="COMPROVANTE_ADESAO_MICRO_AJUSTE_V33">
+/* V3.3 - mantém os espelhamentos da V3.2 e destaca opcionais: azul vazio, verde preenchido. */
 (function(){
   if(window.__comprovanteMicroAjusteV32) return;
   window.__comprovanteMicroAjusteV32 = true;
@@ -2069,12 +2082,13 @@ async function copiarJSON(){
   function clearGlow(el){ setGlowLocal(el, null); }
 
   const SELECT_TEXT_FIELDS = [
+    { id:'prestadora', placeholder:'Preenchido automaticamente pelo plano da Proposta' },
     { id:'plano_contrato', placeholder:'Preenchido automaticamente pelo Nome do plano da Proposta' },
     { id:'contrato', placeholder:'Preenchido automaticamente pelo Contrato da Proposta' },
     { id:'resp_resolve', placeholder:'Preenchido automaticamente pelo Vendedor da Proposta' }
   ];
   const FIELDS_WITHOUT_NEON = [
-    'nome_benef', 'plano_contrato', 'valor_mensal', 'contrato',
+    'nome_benef', 'prestadora', 'plano_contrato', 'valor_mensal', 'contrato',
     'venc_dia', 'reaj_mes', 'nome_benef_auto', 'resp_resolve'
   ];
 
@@ -2138,14 +2152,6 @@ async function copiarJSON(){
     updateTextDisplays();
     clearNonManualNeons();
 
-    const prestEl = $('prestadora');
-    if(prestEl){
-      const focused = document.activeElement === prestEl;
-      const filled = !!prestEl.value;
-      if(focused) setGlowLocal(prestEl, 'glow-focus');
-      else setGlowLocal(prestEl, filled ? 'glow-ok' : 'glow-error');
-    }
-
     const tipo = (typeof window.getAtivTipo === 'function') ? window.getAtivTipo() : '';
     const ativEl = $('ativ_data');
     if(ativEl){
@@ -2158,22 +2164,18 @@ async function copiarJSON(){
       }
     }
 
+    // V3.3: opcionais destacados em azul enquanto vazios/incompletos e verdes quando preenchidos.
+    // Nunca recebem neon vermelho, pois não participam da validação obrigatória.
     const desistEl = $('desist_mes');
     if(desistEl){
-      const focused = document.activeElement === desistEl;
       const filled = !!desistEl.value;
-      if(focused) setGlowLocal(desistEl, 'glow-focus');
-      else if(filled) setGlowLocal(desistEl, 'glow-ok');
-      else clearGlow(desistEl);
+      setGlowLocal(desistEl, filled ? 'glow-ok' : 'glow-focus');
     }
 
     const portEl = $('port_data');
     if(portEl){
-      const focused = document.activeElement === portEl;
       const valid = okDate(portEl.value);
-      if(focused) setGlowLocal(portEl, 'glow-focus');
-      else if(valid) setGlowLocal(portEl, 'glow-ok');
-      else clearGlow(portEl);
+      setGlowLocal(portEl, valid ? 'glow-ok' : 'glow-focus');
     }
   }
 

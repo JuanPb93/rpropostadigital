@@ -207,7 +207,7 @@
     <div class="brand">
       <div>
         <div class="title">R-Proposta Digital</div>
-        <div class="sub">v3.1 MOBILE • PC, tablet e celular</div>
+        <div class="sub">Desktop  • MOBILE</div>
       </div>
       <div class="pill" title="Persistência local">localStorage</div>
     </div>
@@ -472,7 +472,7 @@
   }
 
 
-  // V3.3 - espelhamento em tempo real da PROPOSTA COLETIVO POR ADESÃO
+  // V3.2 - espelhamento em tempo real da PROPOSTA COLETIVO POR ADESÃO
   // Fonte: proposta. Destinos: termo de consentimento e comprovante de adesão.
   const propostaMirrorV31 = {
     data: null,
@@ -1653,7 +1653,7 @@
     await appendAttachments(outDoc);
 
 	outDoc.setTitle((pdfFileName || getPdfFileName()).replace(/\.pdf$/i,''));
-	outDoc.setProducer('R-Proposta Digital v3.1 MOBILE - PDF final limpo');
+	outDoc.setProducer('R-Proposta Digital v3.3 MOBILE - PDF final limpo');
 	return await outDoc.save({useObjectStreams:true, addDefaultPage:false, updateFieldAppearances:false});
   }
 
