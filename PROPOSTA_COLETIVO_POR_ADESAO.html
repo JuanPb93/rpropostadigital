@@ -145,7 +145,7 @@ button.secondary{background:#6b7280} button.light{background:#e5e7eb;color:#111}
   <div class="inline-calc"><div class="fg"><label>Valor do plano (R$) *</label><input id="valor_plano" inputmode="numeric"></div><div class="fg"><label>% da Taxa *</label><input id="pct_taxa" inputmode="numeric"></div><button type="button" id="btn_calc_taxa" class="orange" title="Calcular Taxa">=</button></div>
   <div class="taxa-isento-wrap"><div class="fg"><label>Taxa (R$) *</label><input id="taxa" inputmode="numeric" readonly title="Calculado automaticamente pelo botão ="></div><label class="isento-flag"><input type="checkbox" id="taxa_isento"> ISENTO</label></div>
   <div class="fg"><label>Contrato *</label><div class="contrato-wrap"><select id="contrato_nome" required><option value="">SELECIONE O CONTRATO</option>
-<option value="1673">ACIP INTERMED</option><option value="1599">ASSIFPI INTERMED</option><option value="1609">SINTUFPI INTERMED</option><option value="590">SISMUJOF</option><option value="5361">ACIP</option><option value="4677">ADCESP</option><option value="4691">ASSIFPI</option><option value="5446">CAU</option><option value="5621">CDL</option><option value="5580">CRECI</option><option value="4709">CRF</option><option value="5562">CRMV</option><option value="4572">FESPPI</option><option value="5392">SENATEPI</option><option value="4599">SINDEPOL</option><option value="5841">SINPRO</option><option value="4903">SINSEP</option><option value="4970">SINTEPI</option><option value="4690">SINTUFPI</option></select><input id="contrato" readonly tabindex="-1"></div></div>
+<option value="1673">ACIP INTERMED</option><option value="1599">ASSIFPI INTERMED</option><option value="1609">SINTUFPI INTERMED</option><option value="590">SISMUJOF</option><option value="5361">ACIP</option><option value="4677">ADCESP</option><option value="4713">AFSEBRAE</option><option value="4691">ASSIFPI</option><option value="5446">CAU</option><option value="5621">CDL</option><option value="5580">CRECI</option><option value="4709">CRF</option><option value="5562">CRMV</option><option value="4572">FESPPI</option><option value="5392">SENATEPI</option><option value="4599">SINDEPOL</option><option value="5841">SINPRO</option><option value="4903">SINSEP</option><option value="4970">SINTEPI</option><option value="4690">SINTUFPI</option></select><input id="contrato" readonly tabindex="-1"></div></div>
   </div>
  </section>
  <section class="form-section titular-pessoais">
@@ -903,7 +903,7 @@ function gotoPrint(){let f=$('fillArea'),p=$('printArea');document.body.classLis
 function voltar(){let f=$('fillArea'),p=$('printArea');document.body.classList.remove('previewing');if(p){p.classList.remove('preview-active');p.style.display='none'}if(f)f.style.display='block';window.scrollTo(0,0)}
 function preview(){try{fillPrint();applyPosAll();gotoPrint()}catch(e){console.error(e);alert('Erro ao abrir a prévia: '+(e&&e.message?e.message:e))}}
 function gerarImprimir(){if(!validate())return;try{fillPrint();applyPosAll();gotoPrint();setTimeout(()=>window.print(),80)}catch(e){console.error(e);alert('Erro ao gerar impressão: '+(e&&e.message?e.message:e))}}
-function novo(){document.querySelectorAll('#fillArea input,#fillArea select').forEach(el=>{if(el.type==='radio'||el.type==='checkbox')el.checked=false;else el.value=''; if(el.dataset){el.dataset.cents='0';el.dataset.pcents='0';delete el.dataset.prevValue;delete el.dataset.prevCents}});$('valor_plano').value='0,00';$('taxa').value='0,00';$('pct_taxa').value='0,00';$$('.psel').forEach(cb=>cb.disabled=false);syncTaxaIsento();showError([]);refreshAllGlows()}
+function novo(){document.querySelectorAll('#fillArea input,#fillArea select').forEach(el=>{if(el.type==='radio'||el.type==='checkbox')el.checked=false;else el.value=''; if(el.dataset){el.dataset.cents='0';el.dataset.pcents='0';delete el.dataset.prevValue;delete el.dataset.prevCents}});$('valor_plano').value='0,00';$('taxa').value='0,00';$('pct_taxa').value='0,00';$$('.psel').forEach(cb=>cb.disabled=false);syncTaxaIsento();atualizarPlanosPorContrato();showError([]);refreshAllGlows()}
 function fieldHasValue(el){
   if(!el)return false;
   if(isTaxaIsento()&&(el.id==='taxa'||el.id==='pct_taxa'))return true;
@@ -937,7 +937,79 @@ function bindGlowInputs(){document.querySelectorAll('#fillArea input,#fillArea s
   el.addEventListener('change',()=>updateGlow(el));
   updateGlow(el);
 })}
-document.addEventListener('DOMContentLoaded',()=>{applyPosAll();attachMoneyMask($('valor_plano'));attachMoneyMask($('taxa'));attachPercentMask($('pct_taxa'));$('btn_calc_taxa').addEventListener('click',()=>{recomputeTaxaFromPct();refreshAllGlows()});if($('taxa_isento')){$('taxa_isento').addEventListener('change',syncTaxaIsento);syncTaxaIsento()}$('contrato_nome').addEventListener('change',()=>{$('contrato').value=$('contrato_nome').value;refreshAllGlows()});$('nome_plano').addEventListener('change',()=>{let o=$('nome_plano').selectedOptions[0];$('codigo_plano').value=o?(o.dataset.codigo?o.dataset.codigo+' - '+o.value:''):'';refreshAllGlows()});attachMask('cpf_titular',formatCpf);attachMask('data_titular',formatDate);attachMask('cns_titular',formatCns);attachMask('cep',formatCep);attachMask('fone',formatPhone);attachMask('numero',v=>onlyDigitsMax(v,7));$('numero_sn').addEventListener('change',syncNumeroSN);syncNumeroSN();['nome_titular'].forEach(id=>attachText(id,allowedName));['cidade_titular','logradouro','bairro','cidade'].forEach(id=>attachText(id,allowedAddress));attachText('complemento',allowedComplement);bindCidadeUF('local_titular','cidade_titular','uf_titular');for(let i=1;i<=4;i++){attachText('dep'+i,allowedName);attachMask('cpf_d'+i,formatCpf);attachMask('data_d'+i,formatDate);attachMask('telefone_d'+i,formatPhone);attachMask('cns_d'+i,formatCns);attachText('cidade_d'+i,allowedAddress);bindCidadeUF('local_d'+i,'cidade_d'+i,'uf_d'+i);bindEmail('email_d'+i,false)}bindEmail('email_titular',true);$$('.psel').forEach(cb=>cb.addEventListener('change',e=>syncPSC(e.target)));$$('.tab-btn').forEach(b=>b.addEventListener('click',()=>{$$('.tab-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');$$('.tab-pane').forEach(p=>p.classList.remove('active'));$('tab_'+b.dataset.tab).classList.add('active')}));bindGlowInputs();refreshAllGlows();})
+
+/* V3.3.1 - filtro de planos por contrato, preservando nomes e códigos originais. */
+const PLANOS_V331={
+  PLENO:'ATENDEMED PLENO II',
+  TOP:'ATENDEMED TOP',
+  DIAMANTE:'DIAMANTE COLETIVO POR ADESÃO',
+  PRATA:'PRATA COLETIVO POR ADESÃO',
+  UNIPE:'UNIPÊ CO ADESÃO',
+  UNIPE_MAIS:'UNIPÊ CO MAIS ADESÃO',
+  UM_BASICO:'UNIMULTI EMPRESARIAL BÁSICO',
+  UM_ESPECIAL:'UNIMULTI EMPRESARIAL ESPECIAL',
+  UM_BASICO_COPART:'UNIMULTI EMPRESARIAL BÁSICO COPART',
+  UM_ESPECIAL_COPART:'UNIMULTI EMPRESARIAL ESPECIAL COPART',
+  UV_BASICO:'UNIVIDA BÁSICO',
+  UV_ESPECIAL:'UNIVIDA ESPECIAL',
+  UV_BASICO_COPART:'UNIVIDA BÁSICO COPART',
+  UV_ESPECIAL_COPART:'UNIVIDA ESPECIAL COPART'
+};
+const PLANOS_POR_CONTRATO_V331={
+  '1673':[PLANOS_V331.PRATA,PLANOS_V331.DIAMANTE],
+  '1599':[PLANOS_V331.PLENO,PLANOS_V331.TOP,PLANOS_V331.DIAMANTE,PLANOS_V331.PRATA],
+  '1609':[PLANOS_V331.PLENO,PLANOS_V331.TOP,PLANOS_V331.DIAMANTE,PLANOS_V331.PRATA],
+  '590':[PLANOS_V331.PLENO,PLANOS_V331.TOP,PLANOS_V331.DIAMANTE],
+  '5361':[PLANOS_V331.UM_BASICO,PLANOS_V331.UM_ESPECIAL,PLANOS_V331.UV_ESPECIAL,PLANOS_V331.UM_BASICO_COPART,PLANOS_V331.UM_ESPECIAL_COPART,PLANOS_V331.UV_BASICO_COPART,PLANOS_V331.UV_ESPECIAL_COPART],
+  '4677':[PLANOS_V331.UM_ESPECIAL,PLANOS_V331.UV_ESPECIAL],
+  '4713':[PLANOS_V331.UNIPE,PLANOS_V331.UNIPE_MAIS,PLANOS_V331.UM_BASICO,PLANOS_V331.UM_ESPECIAL,PLANOS_V331.UM_BASICO_COPART,PLANOS_V331.UM_ESPECIAL_COPART,PLANOS_V331.UV_BASICO,PLANOS_V331.UV_ESPECIAL,PLANOS_V331.UV_BASICO_COPART,PLANOS_V331.UV_ESPECIAL_COPART],
+  '4691':[PLANOS_V331.UM_ESPECIAL,PLANOS_V331.UV_ESPECIAL,PLANOS_V331.UM_ESPECIAL_COPART,PLANOS_V331.UV_ESPECIAL_COPART],
+  '5446':[PLANOS_V331.UM_BASICO,PLANOS_V331.UM_ESPECIAL,PLANOS_V331.UV_ESPECIAL],
+  '5621':[PLANOS_V331.UM_BASICO,PLANOS_V331.UM_ESPECIAL,PLANOS_V331.UV_ESPECIAL,PLANOS_V331.UM_BASICO_COPART,PLANOS_V331.UM_ESPECIAL_COPART,PLANOS_V331.UV_BASICO_COPART,PLANOS_V331.UV_ESPECIAL_COPART],
+  '5580':[PLANOS_V331.UM_BASICO,PLANOS_V331.UM_ESPECIAL,PLANOS_V331.UV_BASICO,PLANOS_V331.UV_ESPECIAL],
+  '4709':[PLANOS_V331.UM_ESPECIAL,PLANOS_V331.UV_ESPECIAL,PLANOS_V331.UM_BASICO_COPART,PLANOS_V331.UM_ESPECIAL_COPART,PLANOS_V331.UV_BASICO_COPART,PLANOS_V331.UV_ESPECIAL_COPART],
+  '5562':[PLANOS_V331.UM_BASICO,PLANOS_V331.UM_ESPECIAL,PLANOS_V331.UV_BASICO,PLANOS_V331.UV_ESPECIAL,PLANOS_V331.UM_BASICO_COPART,PLANOS_V331.UM_ESPECIAL_COPART,PLANOS_V331.UV_BASICO_COPART,PLANOS_V331.UV_ESPECIAL_COPART],
+  '4572':[PLANOS_V331.UM_BASICO,PLANOS_V331.UM_ESPECIAL,PLANOS_V331.UV_BASICO,PLANOS_V331.UV_ESPECIAL],
+  '5392':[PLANOS_V331.UM_ESPECIAL,PLANOS_V331.UV_ESPECIAL],
+  '4599':[PLANOS_V331.UM_BASICO,PLANOS_V331.UM_ESPECIAL,PLANOS_V331.UV_BASICO,PLANOS_V331.UV_ESPECIAL,PLANOS_V331.UM_BASICO_COPART,PLANOS_V331.UM_ESPECIAL_COPART,PLANOS_V331.UV_BASICO_COPART,PLANOS_V331.UV_ESPECIAL_COPART],
+  '5841':[PLANOS_V331.UM_BASICO,PLANOS_V331.UM_ESPECIAL,PLANOS_V331.UV_ESPECIAL],
+  '4903':[PLANOS_V331.UM_BASICO,PLANOS_V331.UM_ESPECIAL,PLANOS_V331.UV_ESPECIAL,PLANOS_V331.UM_BASICO_COPART,PLANOS_V331.UM_ESPECIAL_COPART,PLANOS_V331.UV_ESPECIAL_COPART],
+  '4970':[PLANOS_V331.UM_BASICO,PLANOS_V331.UM_ESPECIAL,PLANOS_V331.UV_BASICO,PLANOS_V331.UV_ESPECIAL],
+  '4690':[PLANOS_V331.UNIPE,PLANOS_V331.UNIPE_MAIS,PLANOS_V331.UM_BASICO,PLANOS_V331.UM_ESPECIAL,PLANOS_V331.UM_BASICO_COPART,PLANOS_V331.UM_ESPECIAL_COPART,PLANOS_V331.UV_BASICO,PLANOS_V331.UV_ESPECIAL,PLANOS_V331.UV_BASICO_COPART,PLANOS_V331.UV_ESPECIAL_COPART]
+};
+const CONTRATOS_UM_BASICO_CONDICIONAL_V331=new Set(['5361','5621','5580','5562','4572','4599','5841','4970','4690']);
+const MOVIMENTACOES_UM_BASICO_V331=new Set(['prog_incl_dep','imm_rn','imm_dependente']);
+const CATALOGO_PLANOS_V331=Array.from($('nome_plano').options).slice(1).map(o=>({value:o.value,text:o.textContent,codigo:o.dataset.codigo||''}));
+function atualizarCodigoPlanoV331(){
+  const sel=$('nome_plano'),codigo=$('codigo_plano');
+  if(!sel||!codigo)return;
+  const o=sel.selectedOptions[0];
+  codigo.value=o&&o.value&&o.dataset.codigo?o.dataset.codigo+' - '+o.value:'';
+}
+function atualizarPlanosPorContrato(){
+  const contrato=$('contrato_nome'),sel=$('nome_plano');
+  if(!contrato||!sel)return;
+  const contratoId=String(contrato.value||'');
+  const anterior=String(sel.value||'');
+  let permitidos=(PLANOS_POR_CONTRATO_V331[contratoId]||[]).slice();
+  if(CONTRATOS_UM_BASICO_CONDICIONAL_V331.has(contratoId)){
+    const mov=document.querySelector('input[name="mov"]:checked')?.value||'';
+    if(!MOVIMENTACOES_UM_BASICO_V331.has(mov))permitidos=permitidos.filter(p=>p!==PLANOS_V331.UM_BASICO);
+  }
+  const conjunto=new Set(permitidos);
+  sel.innerHTML='<option value="">SELECIONE O PLANO</option>';
+  CATALOGO_PLANOS_V331.forEach(item=>{
+    if(!conjunto.has(item.value))return;
+    const o=document.createElement('option');
+    o.value=item.value;o.textContent=item.text;if(item.codigo)o.dataset.codigo=item.codigo;
+    sel.appendChild(o);
+  });
+  sel.value=conjunto.has(anterior)?anterior:'';
+  atualizarCodigoPlanoV331();
+  if(typeof refreshAllGlows==='function')refreshAllGlows();
+}
+
+document.addEventListener('DOMContentLoaded',()=>{applyPosAll();attachMoneyMask($('valor_plano'));attachMoneyMask($('taxa'));attachPercentMask($('pct_taxa'));$('btn_calc_taxa').addEventListener('click',()=>{recomputeTaxaFromPct();refreshAllGlows()});if($('taxa_isento')){$('taxa_isento').addEventListener('change',syncTaxaIsento);syncTaxaIsento()}$('contrato_nome').addEventListener('change',()=>{$('contrato').value=$('contrato_nome').value;atualizarPlanosPorContrato();refreshAllGlows()});$('nome_plano').addEventListener('change',()=>{atualizarCodigoPlanoV331();refreshAllGlows()});attachMask('cpf_titular',formatCpf);attachMask('data_titular',formatDate);attachMask('cns_titular',formatCns);attachMask('cep',formatCep);attachMask('fone',formatPhone);attachMask('numero',v=>onlyDigitsMax(v,7));$('numero_sn').addEventListener('change',syncNumeroSN);syncNumeroSN();['nome_titular'].forEach(id=>attachText(id,allowedName));['cidade_titular','logradouro','bairro','cidade'].forEach(id=>attachText(id,allowedAddress));attachText('complemento',allowedComplement);bindCidadeUF('local_titular','cidade_titular','uf_titular');for(let i=1;i<=4;i++){attachText('dep'+i,allowedName);attachMask('cpf_d'+i,formatCpf);attachMask('data_d'+i,formatDate);attachMask('telefone_d'+i,formatPhone);attachMask('cns_d'+i,formatCns);attachText('cidade_d'+i,allowedAddress);bindCidadeUF('local_d'+i,'cidade_d'+i,'uf_d'+i);bindEmail('email_d'+i,false)}bindEmail('email_titular',true);$$('.psel').forEach(cb=>cb.addEventListener('change',e=>syncPSC(e.target)));$$('input[name="mov"]').forEach(r=>r.addEventListener('change',atualizarPlanosPorContrato));atualizarPlanosPorContrato();$$('.tab-btn').forEach(b=>b.addEventListener('click',()=>{$$('.tab-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');$$('.tab-pane').forEach(p=>p.classList.remove('active'));$('tab_'+b.dataset.tab).classList.add('active')}));bindGlowInputs();refreshAllGlows();})
 </script>
 <div id="emailSuggest" class="email-suggest"></div>
 
