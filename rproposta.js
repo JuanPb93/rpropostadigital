@@ -1,4 +1,4 @@
-/* R-Proposta Digital v5.3 — recuperação de rascunho protegida contra sobrescrita na inicialização. */
+/* R-Proposta Digital v5.4 — visual ADM refinado e espelhamento suspenso nos campos editáveis; demais recursos preservados. */
 (() => {
   if (window.__rpropV53Index) return;
   window.__rpropV53Index = true;
@@ -126,6 +126,7 @@
     if(!admActive) return;
     if(admOrigin==='normal') await setAdmOnNormalFrames(false);
     admActive=false; document.body.classList.remove('rprop-adm-active'); selectOverlay.classList.remove('open');
+    if(admOrigin==='normal'){ try{ if(typeof window.__propostaMirrorV31Sync==='function') window.__propostaMirrorV31Sync(); }catch(e){} }
     scheduleStatus(80);
   }
 
