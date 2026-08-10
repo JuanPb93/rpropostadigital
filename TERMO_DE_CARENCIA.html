@@ -1951,9 +1951,13 @@ body.rprop-editor-mode .rprop-editor-conditional-locked{
   }
 
   // Notify parent to refresh draft/status.
-  let changeTimer=0;
-  function signalChange(){
-    clearTimeout(changeTimer); changeTimer=setTimeout(()=>{ try{ parent.postMessage({__rpropV51:true,type:'STATE_CHANGED',docId:DOC_ID,inst:INST},'*'); }catch(e){} },120);
+  let changeTimer=0, changeTrusted=false;
+  function signalChange(ev){
+    changeTrusted = changeTrusted || !!(ev && ev.isTrusted);
+    clearTimeout(changeTimer); changeTimer=setTimeout(()=>{
+      const userDriven=changeTrusted; changeTrusted=false;
+      try{ parent.postMessage({__rpropV51:true,type:'STATE_CHANGED',docId:DOC_ID,inst:INST,userDriven},'*'); }catch(e){}
+    },120);
   }
   document.addEventListener('input', signalChange, true);
   document.addEventListener('change', signalChange, true);

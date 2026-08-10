@@ -980,11 +980,21 @@ const PLANOS_POR_CONTRATO_V331={
 const CONTRATOS_UM_BASICO_CONDICIONAL_V331=new Set(['5361','5621','5580','5562','4572','4599','5841','4970','4690']);
 const MOVIMENTACOES_UM_BASICO_V331=new Set(['prog_incl_dep','imm_rn','imm_dependente']);
 const CATALOGO_PLANOS_V331=Array.from($('nome_plano').options).slice(1).map(o=>({value:o.value,text:o.textContent,codigo:o.dataset.codigo||''}));
+/* v5.3 - Código do plano sem repetição do nome; abrangência apenas nos planos UNIMED. */
+function abrangenciaPlanoV53(nomePlano){
+  const nome=String(nomePlano||'').toUpperCase();
+  if(nome.startsWith('UNIPÊ'))return 'MUNICIPAL';
+  if(nome.startsWith('UNIMULTI'))return 'ESTADUAL';
+  if(nome.startsWith('UNIVIDA'))return 'NACIONAL';
+  return '';
+}
 function atualizarCodigoPlanoV331(){
   const sel=$('nome_plano'),codigo=$('codigo_plano');
   if(!sel||!codigo)return;
   const o=sel.selectedOptions[0];
-  codigo.value=o&&o.value&&o.dataset.codigo?o.dataset.codigo+' - '+o.value:'';
+  if(!(o&&o.value&&o.dataset.codigo)){codigo.value='';return;}
+  const abrangencia=abrangenciaPlanoV53(o.value);
+  codigo.value=o.dataset.codigo+(abrangencia?' ('+abrangencia+')':'');
 }
 function atualizarPlanosPorContrato(){
   const contrato=$('contrato_nome'),sel=$('nome_plano');
@@ -2249,12 +2259,24 @@ body.rprop-editor-mode .rprop-editor-conditional-locked{
   }
 
   // Notify parent to refresh draft/status.
-  let changeTimer=0;
-  function signalChange(){
-    clearTimeout(changeTimer); changeTimer=setTimeout(()=>{ try{ parent.postMessage({__rpropV51:true,type:'STATE_CHANGED',docId:DOC_ID,inst:INST},'*'); }catch(e){} },120);
+  let changeTimer=0, changeTrusted=false;
+  function signalChange(ev){
+    changeTrusted = changeTrusted || !!(ev && ev.isTrusted);
+    clearTimeout(changeTimer); changeTimer=setTimeout(()=>{
+      const userDriven=changeTrusted; changeTrusted=false;
+      try{ parent.postMessage({__rpropV51:true,type:'STATE_CHANGED',docId:DOC_ID,inst:INST,userDriven},'*'); }catch(e){}
+    },120);
   }
   document.addEventListener('input', signalChange, true);
   document.addEventListener('change', signalChange, true);
+  document.addEventListener('click', ev => {
+    if(ev && ev.isTrusted && ev.target && ev.target.closest && ev.target.closest('#btn_calc_taxa')){
+      changeTrusted=true; clearTimeout(changeTimer); changeTimer=setTimeout(()=>{
+        const userDriven=changeTrusted; changeTrusted=false;
+        try{ parent.postMessage({__rpropV51:true,type:'STATE_CHANGED',docId:DOC_ID,inst:INST,userDriven},'*'); }catch(e){}
+      },260);
+    }
+  }, true);
 
   // Focus/reveal requested by clickable validation list.
   const style=document.createElement('style');
