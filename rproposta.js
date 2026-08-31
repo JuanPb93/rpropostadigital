@@ -1,4 +1,4 @@
-/* R-Proposta Digital v5.5 — edição reconstrói somente as páginas oficiais e descarta páginas/anexos físicos do PDF original; demais recursos preservados. */
+/* R-Proposta Digital v5.6.1 — edição reconstrói somente as páginas oficiais e descarta páginas/anexos físicos do PDF original; demais recursos preservados. */
 (() => {
   if (window.__rpropV53Index) return;
   window.__rpropV53Index = true;
