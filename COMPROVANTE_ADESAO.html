@@ -517,6 +517,8 @@ button[onclick*="toggleCalib"]{ display:none !important; }
           <option value="UNIVIDA BÁSICO COPART (AMB + HOSP C/ OBSTETRÍCIA)">UNIVIDA BÁSICO COPART (AMB + HOSP C/ OBSTETRÍCIA)</option>
           <option value="UNIPÊ CO ADESÃO">UNIPÊ CO ADESÃO</option>
           <option value="UNIPÊ CO MAIS ADESÃO">UNIPÊ CO MAIS ADESÃO</option>
+           <option value="PLENO I">PLENO I</option>
+           <option value="PLENO II">PLENO II</option>
         </select>
       </div>
     </div>
@@ -560,16 +562,20 @@ button[onclick*="toggleCalib"]{ display:none !important; }
         <select id="contrato">
           <option value="">SELECIONE...</option>
           <option value="ACIP INTERMED">ACIP INTERMED</option>
+           
           <option value="ASSIFPI INTERMED">ASSIFPI INTERMED</option>
           <option value="SINTUFPI INTERMED">SINTUFPI INTERMED</option>
           <option value="SISMUJOF">SISMUJOF</option>
           <option value="ACIP">ACIP</option>
+           
           <option value="ADCESP">ADCESP</option>
           <option value="ASSIFPI">ASSIFPI</option>
+           <option value="ASPOM">ASPOM</option>
           <option value="CAU">CAU</option>
           <option value="CDL">CDL</option>
           <option value="CRECI">CRECI</option>
           <option value="CRF">CRF</option>
+           
           <option value="CRMV">CRMV</option>
           <option value="FESPPI">FESPPI</option>
           <option value="SENATEPI">SENATEPI</option>
@@ -577,6 +583,7 @@ button[onclick*="toggleCalib"]{ display:none !important; }
           <option value="SINPRO">SINPRO</option>
           <option value="SINSEP">SINSEP</option>
           <option value="SINTEPI">SINTEPI</option>
+           
           <option value="SINTUFPI">SINTUFPI</option>
         </select>
       </div>
@@ -847,6 +854,7 @@ button[onclick*="toggleCalib"]{ display:none !important; }
     ["ACIP", "7", "FEVEREIRO"],
     ["ADCESP", "20", "JANEIRO"],
     ["ASSIFPI", "5", "OUTUBRO"],
+    ["ASPOM", "11", "DEZEMBRO"],
     ["CAU", "5", "ABRIL"],
     ["CDL", "7", "AGOSTO"],
     ["CRECI", "10", "JULHO"],
@@ -1872,16 +1880,16 @@ async function copiarJSON(){
     'UNIPE CO MAIS ADESAO': 'UNIPÊ CO MAIS ADESÃO'
   };
   const CONTRACT_MAP = {
-    '1673':'ACIP INTERMED', '1599':'ASSIFPI INTERMED', '1609':'SINTUFPI INTERMED', '590':'SISMUJOF',
-    '5361':'ACIP', '4677':'ADCESP', '4691':'ASSIFPI', '5446':'CAU', '5621':'CDL', '5580':'CRECI',
-    '4709':'CRF', '5562':'CRMV', '4572':'FESPPI', '5392':'SENATEPI', '4599':'SINDEPOL', '5841':'SINPRO',
-    '4903':'SINSEP', '4970':'SINTEPI', '4690':'SINTUFPI'
+    '1673':'ACIP INTERMED', '1673-E':'ACIP INTERMED', '1599':'ASSIFPI INTERMED', '1609':'SINTUFPI INTERMED', '590':'SISMUJOF',
+    '5361':'ACIP', '5361-E':'ACIP', '4677':'ADCESP', '4691':'ASSIFPI', '0000':'ASPOM', '5446':'CAU', '5621':'CDL', '5580':'CRECI',
+    '4709':'CRF', '4709-E':'CRF', '5562':'CRMV', '4572':'FESPPI', '5392':'SENATEPI', '4599':'SINDEPOL', '5841':'SINPRO',
+    '4903':'SINSEP', '4970':'SINTEPI', '4970-E':'SINTEPI', '4690':'SINTUFPI'
   };
   const CONTRACT_DEP_V31 = {
-    'ACIP INTERMED':['11','NOVEMBRO'], 'ASSIFPI INTERMED':['11','MARÇO'], 'SINTUFPI INTERMED':['11','ABRIL'], 'SISMUJOF':['11','ABRIL'],
-    'ACIP':['7','FEVEREIRO'], 'ADCESP':['20','JANEIRO'], 'ASSIFPI':['5','OUTUBRO'], 'CAU':['5','ABRIL'], 'CDL':['7','AGOSTO'],
-    'CRECI':['10','JULHO'], 'CRF':['5','JULHO'], 'CRMV':['9','JULHO'], 'FESPPI':['10','OUTUBRO'], 'SENATEPI':['9','MARÇO'],
-    'SINDEPOL':['19','JANEIRO'], 'SINPRO':['6','JANEIRO'], 'SINSEP':['5','JULHO'], 'SINTEPI':['5','OUTUBRO'], 'SINTUFPI':['5','SETEMBRO']
+    'ACIP INTERMED':['11','NOVEMBRO'], 'ACIP INTERMED ENCAIXE':['11','NOVEMBRO'], 'ASSIFPI INTERMED':['11','MARÇO'], 'SINTUFPI INTERMED':['11','ABRIL'], 'SISMUJOF':['11','ABRIL'],
+    'ACIP':['7','FEVEREIRO'], 'ACIP ENCAIXE':['7','FEVEREIRO'], 'ADCESP':['20','JANEIRO'], 'ASSIFPI':['5','OUTUBRO'], 'ASPOM':['11','DEZEMBRO'], 'CAU':['5','ABRIL'], 'CDL':['7','AGOSTO'],
+    'CRECI':['10','JULHO'], 'CRF':['5','JULHO'], 'CRF ENCAIXE':['5','JULHO'], 'CRMV':['9','JULHO'], 'FESPPI':['10','OUTUBRO'], 'SENATEPI':['9','MARÇO'],
+    'SINDEPOL':['19','JANEIRO'], 'SINPRO':['6','JANEIRO'], 'SINSEP':['5','JULHO'], 'SINTEPI':['5','OUTUBRO'], 'SINTEPI ENCAIXE':['5','OUTUBRO'], 'SINTUFPI':['5','SETEMBRO']
   };
   function buildReajTextV31(month){
     const m = String(month || '').trim();
@@ -2004,7 +2012,9 @@ async function copiarJSON(){
   }
   function resolveContract(data){
     const txt = data.contratoTexto || '';
-    const num = onlyDigits(data.contratoValor || '');
+    const codigo = String(data.contratoValor || '').trim();
+    if(codigo && CONTRACT_MAP[codigo]) return CONTRACT_MAP[codigo];
+    const num = onlyDigits(codigo);
     if(num && CONTRACT_MAP[num]) return CONTRACT_MAP[num];
     if(txt) return txt;
     return '';
