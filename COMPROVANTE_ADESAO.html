@@ -1999,6 +1999,11 @@ async function copiarJSON(){
     return mapped || '';
   }
   function resolvePrestadora(data){
+    // ASPOM (37817): ambos os planos PLENO I e PLENO II são INTERMED.
+    // Usa-se o contrato para evitar classificar outros planos homônimos incorretamente.
+    const contratoCodigo = String(data.contratoValor || '').trim();
+    const contratoNome = normalize(data.contratoTexto || '');
+    if(contratoCodigo === '37817' || contratoNome === 'ASPOM') return 'INTERMED';
     const raw = data.nomePlano || data.nomePlanoTexto || '';
     const key = normalize(raw);
     if(!key) return '';
